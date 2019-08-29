@@ -1,0 +1,73 @@
+"use strict";
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const CompressionPlugin = require('compression-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const TerserJSPlugin = require('terser-webpack-plugin');
+
+module.exports = {
+    optimization: {
+        minimizer: [new TerserJSPlugin({}), new OptimizeCSSAssetsPlugin({})],
+        splitChunks: {
+            cacheGroups: {
+              styles: {
+                name: 'styles',
+                test: /\.(css)$/,
+                chunks: 'all',
+                enforce: true,
+              },
+            },
+        },
+    },
+    resolve: {
+        extensions: ['*', '.js', '.jsx', '.scss']
+    },
+    module: {
+        rules: [{
+            test: /\.(js|jsx)$/,
+            exclude: /node_modules/,
+            use: {
+                loader: "babel-loader",
+                options: {
+                    presets: [
+                        ['@babel/preset-env']
+                    ]
+                }
+            }
+        },
+        {
+            test: /\.(css|scss|sass)$/,
+            use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'],
+        },
+        {
+            loader: require.resolve('file-loader'),
+            exclude: [/\.(js|mjs|jsx|ts|tsx|css|sass|scss)$/, /\.html$/, /\.json$/],
+            options: {
+                name: "[name].[ext]",
+            }
+        }]
+    },
+    plugins: [
+        new CleanWebpackPlugin(),
+        new HtmlWebpackPlugin({
+            inject: true,
+            template: './public/index.html',
+            minify: {
+                removeComments: true,
+                collapseWhitespace: true,
+                removeRedundantAttributes: true,
+                useShortDoctype: true,
+                removeEmptyAttributes: true,
+                removeStyleLinkTypeAttributes: true,
+                keepClosingSlash: true,
+                minifyJS: true,
+                minifyCSS: true,
+                minifyURLs: true,
+            },
+        }),
+        new MiniCssExtractPlugin({
+            filename: "[name].css",
+        })
+    ]
+};
