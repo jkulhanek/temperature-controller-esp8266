@@ -21,4 +21,3 @@ settings_t * getSettings() {
 
     return &settings;
 }
-

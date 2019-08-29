@@ -12,7 +12,8 @@
             "/opt/arduino-1.8.9/hardware/tools/**",
             "/opt/arduino-1.8.9/libraries/**",
             "/home/jonas/Documents/Arduino/hardware/tools/**",
-            "/home/jonas/Documents/Arduino/libraries/**"
+            "/home/jonas/Documents/Arduino/libraries/**",
+            "/home/jonas/Arduino/libraries/ArduinoJson/src/**"
         ],
         "forcedInclude": [],
         "intelliSenseMode": "clang-x64",

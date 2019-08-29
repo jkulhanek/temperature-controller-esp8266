@@ -1,5 +1,6 @@
 #ifndef _server_h
 #define _server_h
+#define DATETIME_LENGTH sizeof("2011-10-08T07:07:09Z")
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
@@ -7,6 +8,10 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 #include <FS.h>
+#include <ArduinoJson.h>
+#include <time.h>
+#include "settings.h"
+#include "temperature.h"
 
 ESP8266WebServer server(80);
 
@@ -21,6 +26,8 @@ String getContentType(String filename) {
         return "text/css";
     } else if (filename.endsWith(".js")) {
         return "application/javascript";
+    } else if (filename.endsWith(".json")) {
+        return "application/json";
     } else if (filename.endsWith(".png")) {
         return "image/png";
     } else if (filename.endsWith(".gif")) {
@@ -66,6 +73,39 @@ void handleFileList() {
   server.send(200, "text/json", output);
 }
 
+bool isWriteable(String path) {
+    return path.startsWith("/data");
+}
+
+bool handleFileUpdate(String path) {
+    File f = SPIFFS.open(path, "w+");
+    if(!f) {
+        server.send(500, "text/plain", "Internal server error");
+        return true;
+    }
+            
+    String content = server.arg("plain");
+    f.write(content.c_str());
+    f.flush();
+    f.close();
+    server.send(200, "text/plain", "");
+    return true;
+}
+
+bool handleFileDelete(String path) {
+    if (SPIFFS.exists(path)) {
+        if(!SPIFFS.remove(path)) {
+            server.send(500, "text/plain", "Internal server error");
+        }
+        else{
+            server.send(200, "text/plain", "");
+        }
+        return true;
+    }
+    return false;
+}
+
+
 bool handleFileRead(String path) {
     if (path.endsWith("/")) {
         path += "index.html";
@@ -82,6 +122,26 @@ bool handleFileRead(String path) {
         return true;
     }
     return false;
+}
+
+bool handleFile(String path) {
+    HTTPMethod method = server.method();
+    if(method == HTTPMethod::HTTP_GET) {
+        return handleFileRead(path);
+    }
+    else {
+        if(!isWriteable(path)) {
+            server.send(403, "text/plain", "Forbidden");
+            return true;
+        }
+    }
+    
+    if(method == HTTP_POST || method == HTTP_PUT) {
+        return handleFileUpdate(path);
+    }
+    else if(method == HTTP_DELETE) {
+        return handleFileDelete(path);
+    }
 }
 
 void handleNotFound() {
@@ -101,51 +161,117 @@ void handleNotFound() {
     server.send(404, "text/plain", message);
 }
 
-void handleRoot() {
-    char temp[400];
-    int sec = millis() / 1000;
-    int min = sec / 60;
-    int hr = min / 60;
+void handleTemporaryTemperature() {
+    time_t now;
+    time(&now);
+    auto method = server.method();
+    if(method == HTTP_GET) {
+        settings_t * settings = getSettings();
+        if(!validateTemporaryTemperature(&now)) {
+            server.send(200, "application/json", "null");
+        } else {
+            char timeStr[DATETIME_LENGTH];
+            strftime(timeStr, sizeof(timeStr), "%FT%TZ", gmtime(&settings->temporaryTemperature.start));
+            DynamicJsonDocument doc(1024);
+            doc["temperature"] = settings->temporaryTemperature.temperature;
+            doc["duration"] = settings->temporaryTemperature.duration;
+            doc["start"] = String(timeStr);
+            String json;
+            serializeJson(doc, json);
+            server.send(200, "application/json", json);
+        }
+        return;
+    } else if(method == HTTP_PUT) {
+        String json(server.arg("plain"));
+        DynamicJsonDocument doc(1024);
+        DeserializationError error = deserializeJson(doc, json);
+        if (error) {
+            server.send(400, "text/plain", "Bad request");
+            return;
+        }
 
-    snprintf(temp, 400,
+        float temperature = doc["temperature"];
+        long duration = doc["duration"];
 
-            "<html>\
-    <head>\
-        <meta http-equiv='refresh' content='5'/>\
-        <title>ESP8266 Demo</title>\
-        <style>\
-        body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
-        </style>\
-    </head>\
-    <body>\
-        <h1>Hello from ESP8266!</h1>\
-        <p>Uptime: %02d:%02d:%02d</p>\
-        <img src=\"/test.svg\" />\
-    </body>\
-    </html>",
+        settings_t * settings = getSettings();
+        settings->temporaryTemperature.temperature = temperature;
+        settings->temporaryTemperature.duration = duration;
+        settings->temporaryTemperature.isSet = true;
+        settings->temporaryTemperature.start = now;
+        saveSettings();
+        server.send(200, "application/json", "");
+        return;
+    }
 
-            hr, min % 60, sec % 60
-            );
-    server.send(200, "text/html", temp);
+    server.send(403, "text/plain", "Forbidden");
 }
 
-void drawGraph() {
-  String out = "";
-  char temp[100];
-  out += "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"400\" height=\"150\">\n";
-  out += "<rect width=\"400\" height=\"150\" fill=\"rgb(250, 230, 210)\" stroke-width=\"1\" stroke=\"rgb(0, 0, 0)\" />\n";
-  out += "<g stroke=\"black\">\n";
-  int y = rand() % 130;
-  for (int x = 10; x < 390; x += 10) {
-    int y2 = rand() % 130;
-    sprintf(temp, "<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" stroke-width=\"1\" />\n", x, 140 - y, x + 10, 140 - y2);
-    out += temp;
-    y = y2;
-  }
-  out += "</g>\n</svg>\n";
-  server.send(200, "image/svg+xml", out);
+void handleCurrentPlan() {
+    auto method = server.method();
+    if(method == HTTP_GET) {
+        settings_t * settings = getSettings();
+        
+        String plan("{\"time\":\"");
+        {
+            char timeStr[DATETIME_LENGTH];
+            time_t now;
+            time(&now);
+            strftime(timeStr, sizeof(timeStr), "%FT%TZ", gmtime(&now));
+            plan += String(timeStr);
+        }
+        plan += "\",\"currentPlanId\":";
+        plan += settings->currentPlanId;
+        plan += ",\"plan\":[";
+        unsigned int i;
+        for(i=0;i<7*24 - 1;++i) {
+            plan += decompressTemperature(settings->currentPlan[i]);
+            plan += ",";
+        }
+        plan += settings->currentPlan[i];
+        plan += "]}";
+        server.send(200, "application/json", plan);
+        return;
+    } else if(method == HTTP_PUT) {
+        String json(server.arg("plain"));
+        DynamicJsonDocument doc(8192);
+        DeserializationError error = deserializeJson(doc, json);
+        if (error) {
+            server.send(400, "text/plain", "Bad request");
+            return;
+        }
+
+        {
+            int planId = doc["currentPlanId"];
+            JsonArray plan = doc["plan"];
+            settings_t * settings = getSettings();
+            for(unsigned int i=0;i<7*24;++i) {
+                settings->currentPlan[i] = compressTemperature(plan[i]);
+            }
+            settings->currentPlanId = planId;
+        }
+
+        saveSettings();
+        server.send(200, "application/json", "");
+        return;
+    }
+
+    server.send(403, "text/plain", "Forbidden");
 }
 
+void handleCurrentTemperature() {
+    char timeStr[DATETIME_LENGTH];
+    time_t now;
+    time(&now);
+    strftime(timeStr, sizeof(timeStr), "%FT%TZ", gmtime(&now));
+    String json("{\"time\":\"");
+    json += timeStr;
+    json += "\",\"temperature\":";
+    json += 13.3;
+    json += ",\"userTemperature\":";
+    json += getCurrentUserTemperature();
+    json += "}";
+    server.send(200, "application/json", json);
+}
 
 bool initializeServer() {
     if(!SPIFFS.begin()) {
@@ -160,18 +286,13 @@ bool initializeServer() {
         return false;
     }
 
-    //server.on("/", handleRoot);
     server.on("/list", handleFileList);
-    // server.on("/inline", []() {
-    //     server.send(200, "text/plain", "this works as well");
-    // });
-    // server.onNotFound(handleNotFound);
-
-    //called when the url is not defined here
-    //use it to load content from SPIFFS
+    server.on("/api/temporaryTemperature", handleTemporaryTemperature);
+    server.on("/api/temperature", HTTP_GET, handleCurrentTemperature);
+    server.on("/api/plan", handleCurrentPlan);
     server.onNotFound([]() {
-        if (!handleFileRead(server.uri())) {
-            server.send(404, "text/plain", "FileNotFound");
+        if (!handleFile(server.uri())) {
+            handleNotFound();
         }
     });
 

@@ -1,3 +1,4 @@
 build
 controller/*.bin
 controller/*.elf
+**/node_modules
