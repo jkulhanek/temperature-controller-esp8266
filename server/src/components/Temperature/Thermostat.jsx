@@ -184,18 +184,21 @@ export default class Thermostat extends React.Component {
 				dxy = (Math.abs(dy) > Math.abs(dx)) ? dy : dx;
 			};
       var dValue = (dxy*this.getSizeRatio())/(this.options.diameter)*this.properties.rangeValue;
-			this.props.onChange && this.props.onChange(parseInt(roundHalf(this._drag.startTemperature+dValue)));
+      let value = parseInt(roundHalf(this._drag.startTemperature+dValue));
+      value = Math.min(value, this.props.maxValue);
+      value = Math.max(value, this.props.minValue);
+			this.props.onChange && this.props.onChange(value);
     }
     
     componentDidMount() {
       this.svg.addEventListener('mousedown',this.dragStart);
       this.svg.addEventListener('touchstart',this.dragStart);
       
-      this.svg.addEventListener('mouseup',this.dragEnd);
-      this.svg.addEventListener('mouseleave',this.dragEnd);
+      window.addEventListener('mouseup',this.dragEnd);
+      window.addEventListener('mouseleave',this.dragEnd);
       this.svg.addEventListener('touchend',this.dragEnd);
       
-      this.svg.addEventListener('mousemove',this.dragMove);
+      window.addEventListener('mousemove',this.dragMove);
       this.svg.addEventListener('touchmove',this.dragMove);
     }
 
@@ -203,11 +206,11 @@ export default class Thermostat extends React.Component {
       this.svg.removeEventListener('mousedown',this.dragStart);
       this.svg.removeEventListener('touchstart',this.dragStart);
       
-      this.svg.removeEventListener('mouseup',this.dragEnd);
-      this.svg.removeEventListener('mouseleave',this.dragEnd);
+      window.removeEventListener('mouseup',this.dragEnd);
+      window.removeEventListener('mouseleave',this.dragEnd);
       this.svg.removeEventListener('touchend',this.dragEnd);
       
-      this.svg.removeEventListener('mousemove',this.dragMove);
+      window.removeEventListener('mousemove',this.dragMove);
       this.svg.removeEventListener('touchmove',this.dragMove);
     }
 		
