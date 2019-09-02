@@ -16,6 +16,7 @@
 
 */
 import Dashboard from "views/Dashboard.jsx";
+import Portal from "views/Portal.jsx";
 import UserProfile from "views/UserProfile.jsx";
 import TableList from "views/TableList.jsx";
 import Typography from "views/Typography.jsx";
@@ -24,6 +25,13 @@ import Notifications from "views/Notifications.jsx";
 import Upgrade from "views/Upgrade.jsx";
 
 const dashboardRoutes = [
+  {
+    path: "/portal",
+    name: "Portal",
+    icon: "pe-7s-edit",
+    component: Portal,
+    layout: "/admin"
+  },
   {
     path: "/dashboard",
     name: "Dashboard",

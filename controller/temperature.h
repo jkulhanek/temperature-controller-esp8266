@@ -6,7 +6,6 @@ bool validateTemporaryTemperature(const time_t * time) {
     if(settings->temporaryTemperature.isSet) {
         if(settings->temporaryTemperature.start + settings->temporaryTemperature.duration < *time) {
             settings->temporaryTemperature.isSet = false;
-            saveSettings();
             return false;
         }
         return true;
@@ -33,9 +32,12 @@ float computeCurrentUserTemperature(const time_t * now) {
 }
 
 float currentUserTemperature = -1;
-float getCurrentUserTemperature() {
+void invalidateCurrentUserTemperature() {
     time_t now;
     time(&now);
     currentUserTemperature = computeCurrentUserTemperature(&now);
-    return currentUserTemperature;
+}
+
+float currentTemperature = 13.3;
+void invalidateCurrentTemperature() {
 }

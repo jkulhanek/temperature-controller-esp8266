@@ -1,11 +1,15 @@
 #ifndef _server_h
 #define _server_h
 #define DATETIME_LENGTH sizeof("2011-10-08T07:07:09Z")
-
+#define HTTPS
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
+#ifdef HTTPS
+#include <ESP8266WebServerSecure.h>
+#else
 #include <ESP8266WebServer.h>
+#endif
 #include <ESP8266mDNS.h>
 #include <FS.h>
 #include <ArduinoJson.h>
@@ -13,7 +17,54 @@
 #include "settings.h"
 #include "temperature.h"
 
+#ifdef HTTPS
+ESP8266WebServerSecure server(443);
+
+static const char serverCert[] PROGMEM = R"EOF(
+-----BEGIN CERTIFICATE-----
+MIID3jCCAsagAwIBAgIUKbllW2IFEQAU9z4x11J+yd0THfgwDQYJKoZIhvcNAQEL
+BQAwgYsxCzAJBgNVBAYTAlVTMRkwFwYDVQQKExBDbG91ZEZsYXJlLCBJbmMuMTQw
+MgYDVQQLEytDbG91ZEZsYXJlIE9yaWdpbiBTU0wgQ2VydGlmaWNhdGUgQXV0aG9y
+aXR5MRYwFAYDVQQHEw1TYW4gRnJhbmNpc2NvMRMwEQYDVQQIEwpDYWxpZm9ybmlh
+MB4XDTE5MDkwMjE1NTUwMFoXDTM0MDgyOTE1NTUwMFowYjEZMBcGA1UEChMQQ2xv
+dWRGbGFyZSwgSW5jLjEdMBsGA1UECxMUQ2xvdWRGbGFyZSBPcmlnaW4gQ0ExJjAk
+BgNVBAMTHUNsb3VkRmxhcmUgT3JpZ2luIENlcnRpZmljYXRlMFwwDQYJKoZIhvcN
+AQEBBQADSwAwSAJBAOcDq3dHlvNvoK+OIVzSe8t5CwQg9dob+y3wbKDM7CZeUTHI
+TqHw8xeHDFSBCFvynxZz38Hxm0nD4Kl7HgOOE+sCAwEAAaOCASgwggEkMA4GA1Ud
+DwEB/wQEAwIFoDAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwEwDAYDVR0T
+AQH/BAIwADAdBgNVHQ4EFgQUS5k0efFwCmIgecI3BDaDTPNi5EowHwYDVR0jBBgw
+FoAUJOhTV118NECHqeuU27rhFnj8KaQwQAYIKwYBBQUHAQEENDAyMDAGCCsGAQUF
+BzABhiRodHRwOi8vb2NzcC5jbG91ZGZsYXJlLmNvbS9vcmlnaW5fY2EwKQYDVR0R
+BCIwIIIPKi5rdWxoYW5rb3ZpLnRrgg1rdWxoYW5rb3ZpLnRrMDgGA1UdHwQxMC8w
+LaAroCmGJ2h0dHA6Ly9jcmwuY2xvdWRmbGFyZS5jb20vb3JpZ2luX2NhLmNybDAN
+BgkqhkiG9w0BAQsFAAOCAQEAkcDdGJ7oN1Sy0KC663oAZQuxX/PwfB25KeFj0PFH
+YDDvfH4M39cw+rBqYC2vc7fXvURZZIxQVT34mDU5OncHZxBBzkUpftQ9ObOVg7F/
+40M/DF240apzaggUtCdV2l6Jb43HunizlGtLcyk3zOb3/Vnw/zI4AFcuOh7ierx8
+QAyj5b+uYbuOeBgOEeKu4y3mw1ypc4ob5HsAFasqeEMK3ZhbxqtLr0xCIDoybZXb
+nPLsiymqc7d7HDZ0DI+KHQLSY459okZ6rmhFv8dxhYVlGcFQFqvm09M77i88tV4Z
+3Qgr8CpBo6Em/ZzmFwPbqCYr0plc86K2UyJn6tm8fN127A==
+-----END CERTIFICATE-----
+)EOF";
+static const char serverKey[] PROGMEM = R"EOF(
+-----BEGIN PRIVATE KEY-----
+MIIBVAIBADANBgkqhkiG9w0BAQEFAASCAT4wggE6AgEAAkEA5wOrd0eW82+gr44h
+XNJ7y3kLBCD12hv7LfBsoMzsJl5RMchOofDzF4cMVIEIW/KfFnPfwfGbScPgqXse
+A44T6wIDAQABAkArh5B+qFm0Qzt2+QQmVm8HNyaxP3i0AYPB80S0xAhXbiCLlQo8
+K6o4xY86FnOI2/C9XkuBhv6D38FvimPdnNIxAiEA/TgkkHGKYDD+yl5+NUqrGvzy
+i3H0YxoGpt2WdXLLcwMCIQDpjRqNgnl4yrdwrIdCHSs04d0wPsXDxGQz8cAkzYcS
++QIhAOP6NBFH6AmKkxqn0IEyZLK7obMiOaEvwWVigx/i5oD5AiAvhIwAeqloUCZe
+gFvMsc6WpdWw+TSXjh+tCeTEGCUBUQIgWxUk7eoq2PaKmUYpxJw7TwqIsEvFVoQK
+HB7zNPhS+t8=
+-----END PRIVATE KEY-----
+)EOF";
+#else
 ESP8266WebServer server(80);
+#endif
+
+const char* www_username = "admin";
+const char* www_password = "esp8266";
+const char* www_realm = "Custom Auth Realm";
+String authFailResponse = "Authentication Failed";
 
 String getContentType(String filename) {
     if (server.hasArg("download")) {
@@ -105,6 +156,29 @@ bool handleFileDelete(String path) {
     return false;
 }
 
+bool handleAuthentication() {
+    if (!server.authenticate(www_username, www_password)) {
+        server.requestAuthentication(HTTPAuthMethod::BASIC_AUTH, www_realm, authFailResponse);
+        return true;
+    }
+
+    return false;
+}
+
+bool handleHttpOptions() {
+    server.sendHeader("Access-Control-Allow-Origin", "*");
+    server.sendHeader("Access-Control-Allow-Methods", "PUT,POST,GET,OPTIONS");
+    server.sendHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+
+    if (server.method() == HTTP_OPTIONS) {
+        server.sendHeader("Access-Control-Max-Age", "10000");
+        server.send(204);
+        return true;
+    }
+    
+    return false;
+}
+
 
 bool handleFileRead(String path) {
     if (path.endsWith("/")) {
@@ -117,6 +191,12 @@ bool handleFileRead(String path) {
             path += ".gz";
         }
         File file = SPIFFS.open(path, "r");
+        if(!isWriteable(path)) {
+            server.sendHeader("Cache-Control","max-age=31536000");
+        }
+        else {
+            if(handleAuthentication()) return true;
+        }
         server.streamFile(file, contentType);
         file.close();
         return true;
@@ -125,11 +205,14 @@ bool handleFileRead(String path) {
 }
 
 bool handleFile(String path) {
+    if(handleHttpOptions()) return true;
+
     HTTPMethod method = server.method();
     if(method == HTTPMethod::HTTP_GET) {
         return handleFileRead(path);
     }
     else {
+        if(handleAuthentication()) return true;
         if(!isWriteable(path)) {
             server.send(403, "text/plain", "Forbidden");
             return true;
@@ -162,6 +245,9 @@ void handleNotFound() {
 }
 
 void handleTemporaryTemperature() {
+    if(handleHttpOptions()) return;
+    if(handleAuthentication()) return;
+
     time_t now;
     time(&now);
     auto method = server.method();
@@ -198,8 +284,13 @@ void handleTemporaryTemperature() {
         settings->temporaryTemperature.duration = duration;
         settings->temporaryTemperature.isSet = true;
         settings->temporaryTemperature.start = now;
-        saveSettings();
+        if(!saveSettings()) {
+            server.send(500, "text/plain", "Internal error");
+            Serial.println("Cannot save settings");
+            return;
+        }
         server.send(200, "application/json", "");
+        invalidateCurrentUserTemperature();
         return;
     }
 
@@ -207,6 +298,9 @@ void handleTemporaryTemperature() {
 }
 
 void handleCurrentPlan() {
+    if(handleHttpOptions()) return;
+    if(handleAuthentication()) return;
+
     auto method = server.method();
     if(method == HTTP_GET) {
         settings_t * settings = getSettings();
@@ -250,15 +344,65 @@ void handleCurrentPlan() {
             settings->currentPlanId = planId;
         }
 
-        saveSettings();
+        if(!saveSettings()) {
+            server.send(500, "text/plain", "Internal error");
+            Serial.println("Cannot save settings");
+            return;
+        }
         server.send(200, "application/json", "");
+        invalidateCurrentUserTemperature();
         return;
     }
 
     server.send(403, "text/plain", "Forbidden");
 }
 
+void handleOn() {
+    if(handleHttpOptions()) return;
+    if(handleAuthentication()) return;
+
+    auto method = server.method();
+    auto settings = getSettings();
+    if(method == HTTP_GET) {
+    }
+    else if(method == HTTP_POST) {
+        String json(server.arg("plain"));
+        DynamicJsonDocument doc(256);
+        DeserializationError error = deserializeJson(doc, json);
+        if (error) {
+            server.send(400, "text/plain", "Bad request");
+            return;
+        }
+
+        settings->isOn = doc["isOn"];
+
+        if(!saveSettings()) {
+            server.send(500, "text/plain", "Internal error");
+            Serial.println("Cannot save settings");
+            return;
+        }
+        invalidateCurrentUserTemperature();
+    } else {
+        server.send(403, "text/plain", "Forbidden");
+        return;
+    }
+
+    server.send(200, "application/json", "{\"isOn\":" + String(settings->isOn ? "true }":"false }"));
+    return;
+}
+
+void handleLogin() {
+    if(handleHttpOptions()) return;
+    if(handleAuthentication()) return;
+    server.send(200, "text/plain", "Logged in");
+    return;
+}
+
 void handleCurrentTemperature() {
+    if(handleHttpOptions()) return;
+    if(handleAuthentication()) return;
+
+
     char timeStr[DATETIME_LENGTH];
     time_t now;
     time(&now);
@@ -266,19 +410,14 @@ void handleCurrentTemperature() {
     String json("{\"time\":\"");
     json += timeStr;
     json += "\",\"temperature\":";
-    json += 13.3;
+    json += currentTemperature;
     json += ",\"userTemperature\":";
-    json += getCurrentUserTemperature();
+    json += currentUserTemperature;
     json += "}";
     server.send(200, "application/json", json);
 }
 
 bool initializeServer() {
-    if(!SPIFFS.begin()) {
-        Serial.println("SPIFFS failed");
-        return false;
-    }
-
     if (MDNS.begin("esp8266")) {
         Serial.println("MDNS responder started");
     } else {
@@ -286,10 +425,17 @@ bool initializeServer() {
         return false;
     }
 
+    #ifdef HTTPS
+
+    server.setRSACert(new BearSSL::X509List(serverCert), new BearSSL::PrivateKey(serverKey));
+    #endif
+    
     server.on("/list", handleFileList);
     server.on("/api/temporaryTemperature", handleTemporaryTemperature);
     server.on("/api/temperature", HTTP_GET, handleCurrentTemperature);
     server.on("/api/plan", handleCurrentPlan);
+    server.on("/api/on", handleOn);
+    server.on("/api/login", handleLogin);
     server.onNotFound([]() {
         if (!handleFile(server.uri())) {
             handleNotFound();
@@ -297,6 +443,11 @@ bool initializeServer() {
     });
 
     server.begin();
+    #ifdef HTTPS
+    MDNS.addService("https", "tcp", 443);
+    #else
+    MDNS.addService("http", "tcp", 80);
+    #endif
     Serial.println("HTTP server started");
     return true;
 }

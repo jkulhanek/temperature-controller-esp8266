@@ -17,6 +17,7 @@
 */
 import React, { Component } from "react";
 import { NavItem, Nav, NavDropdown, MenuItem } from "react-bootstrap";
+import authentication from "authentication";
 
 class AdminNavbarLinks extends Component {
   render() {
@@ -69,7 +70,7 @@ class AdminNavbarLinks extends Component {
             <MenuItem divider />
             <MenuItem eventKey={2.5}>Separated link</MenuItem>
           </NavDropdown>
-          <NavItem eventKey={3} href="#">
+          <NavItem eventKey={3} onClick={(e) => {e.preventDefault(); authentication.logout();}} href="/#logout">
             Log out
           </NavItem>
         </Nav>

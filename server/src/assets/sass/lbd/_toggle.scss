@@ -1,0 +1,64 @@
+$el-default:#20a0ff;
+$el-default-light:#b0d7f5;
+$el-switch:#C0CCDA;
+$el-switch-light:#D3DCE6;
+$el-size-default:100%;
+
+/*switch component*/
+.el-switch,
+.el-switch-style,
+.el-switch-style:before{
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+.el-switch {
+  display: inline-block;
+  font-size: $el-size-default;
+  height: 1.6em;
+  position: relative;
+  .el-switch-style {
+    height: 1.6em;
+    left: 0;
+    background: $el-switch;
+    -webkit-border-radius: 0.8em;
+    border-radius: 0.8em;
+    display: inline-block;
+    position: relative;
+    top: 0;
+    -webkit-transition: all .3s ease-in-out;
+    transition: all .3s ease-in-out;
+    width: 3em;
+    cursor: pointer;
+    &:before{
+      display: block;
+      content:'';
+      height: 1.4em;
+      position: absolute;
+      width: 1.4em;
+      background-color: #fff;
+      -webkit-border-radius: 50%;
+      border-radius: 50%;
+      left: 0.1em;
+      top: 0.1em;
+      -webkit-transition: all .3s ease-in-out;
+      transition: all .3s ease-in-out;
+    }
+  }
+  &>input[type="checkbox"]{
+    display:none;
+    &[disabled] + .el-switch-style{
+      cursor: not-allowed;
+      background-color:$el-switch-light;
+    }
+    &:checked + .el-switch-style{
+      background-color: $el-default;
+      &:before{
+        left:50%;
+      }
+    }
+    &:checked[disabled] + .el-switch-style{
+      background-color:$el-default-light;
+    }
+  }
+}

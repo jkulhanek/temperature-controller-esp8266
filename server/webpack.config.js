@@ -7,6 +7,7 @@ const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const TerserJSPlugin = require('terser-webpack-plugin');
 
 module.exports = {
+    entry: ['babel-polyfill', './src/index.js'],
     optimization: {
         minimizer: [new TerserJSPlugin({}), new OptimizeCSSAssetsPlugin({})],
         splitChunks: {
@@ -41,10 +42,14 @@ module.exports = {
             use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'],
         },
         {
+            test: /\.xlsx$/i,
+            use: 'arraybuffer-loader',
+        },
+        {
             loader: require.resolve('file-loader'),
-            exclude: [/\.(js|mjs|jsx|ts|tsx|css|sass|scss)$/, /\.html$/, /\.json$/],
+            exclude: [/\.(js|mjs|jsx|ts|tsx|css|sass|scss|xlsx)$/, /\.html$/, /\.json$/],
             options: {
-                name: "[name].[ext]",
+                name: "[sha512:hash:base64:7].[ext]",
             }
         }]
     },
@@ -69,5 +74,8 @@ module.exports = {
         new MiniCssExtractPlugin({
             filename: "[name].css",
         })
-    ]
+    ],
+    externals: {
+        ExcelJS: 'ExcelJS',
+    },
 };

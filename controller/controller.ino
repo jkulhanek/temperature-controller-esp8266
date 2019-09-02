@@ -1,14 +1,17 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <time.h>
+#include <FS.h>
 
 #include "common.h"
 #include "display.h"
 #include "server.h"
+#include "settings.h"
 
 int timezone = 3;
 int dst = 0;
-int oldSec = 10000; // Arbitrary number
+unsigned int oldSec = 10000; // Arbitrary number
+unsigned int oldFullSync = 10000; // Arbitrary number
 bool initialized = false;
 
 const char* ssid = STASSID;
@@ -18,7 +21,11 @@ view_t view;
 
 void updateView(view_t *view) {
     time_t now = time(nullptr);
-    view->time = ctime(&now);
+    settings_t * settings = getSettings();
+    strftime(view->time, sizeof(view->time), "%H:%M:%S", localtime(&now));
+    view->is_on = settings->isOn;
+    dtostrf(currentUserTemperature, 4, 1, view->thermostat_temperature);
+    dtostrf(currentTemperature, 4, 1, view->temperature);
 }
 
 void setup() {
@@ -27,6 +34,18 @@ void setup() {
 
     // Initialize display
     initializeDisplay();
+    printLoadingStatus("starting services");
+
+    if(!SPIFFS.begin()) {
+        Serial.println("SPIFFS failed");
+        printError("file service could not be initialized");
+        return;
+    }
+
+    if(!initializeSettings()) {
+        printError("settings could not be initialized");
+        return;
+    }
 
     // Connect to wifi
     printLoadingStatus("connecting to wifi");
@@ -37,6 +56,7 @@ void setup() {
         Serial.print(".");
         delay(1000);
     }
+    view.is_connected = true;
 
     // Starting server
     printLoadingStatus("starting server");
@@ -62,12 +82,25 @@ void loop() {
     if(!initialized) {
         return;
     }
+
+    auto mill = millis();
+
+    // Do connection update every minute
+    if(oldFullSync != mill / 60 * 1000) {
+        // update temperature
+        invalidateCurrentUserTemperature();
+        invalidateCurrentTemperature();
+
+        // check wifi status
+        view.is_connected = WiFi.status() == WL_CONNECTED;
+        oldFullSync = mill / 60 * 1000;
+    }
     
     // Render view once every second
-    if(oldSec != millis() / 1000) {
+    if(oldSec != mill / 1000) {
         updateView(&view);
         render(&view);
-        oldSec = millis() / 1000;
+        oldSec = mill / 1000;
     }
 
     server.handleClient();

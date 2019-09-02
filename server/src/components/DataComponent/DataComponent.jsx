@@ -11,7 +11,7 @@ export default class DataComponent extends React.Component {
     }
 
     render() {
-        return <React.Fragment>{this.props.resource.resource && this.props.children(this.props.resource.resource)}</React.Fragment>;
+        return <React.Fragment>{this.props.children(this.props.resource.resource, this.props.resource.loading)}</React.Fragment>;
     }
 }
 

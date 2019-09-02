@@ -14,13 +14,14 @@ temporaryTemperature_t * getTemporaryTemperature();
 
 
 typedef struct {
-    float temperature;
     temporaryTemperature_t temporaryTemperature;
     int currentPlanId;
+    bool isOn;
     unsigned char currentPlan[24*7];
 } settings_t;
 
-void saveSettings();
+bool saveSettings();
 settings_t * getSettings();
+bool initializeSettings();
 
 #endif

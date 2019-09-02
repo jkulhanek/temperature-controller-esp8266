@@ -14,17 +14,24 @@ import "./assets/css/demo.css";
 import "./assets/css/pe-icon-7-stroke.css";
 
 import AdminLayout from "./layouts/Admin.jsx";
+import LoginForm from "components/LoginForm/LoginForm";
+import { AuthInfoProvider } from 'authentication';
 
 const store = createStore(rootReducer, composeEnhancers(applyMiddleware(thunk)));
 
 ReactDOM.render(
-  <Provider store={store}>
-    <HashRouter>
-      <Switch>
-        <Route exact path="/">
-          <Redirect to="/dashboard" />
-        </Route> 
-        <Route path="/" render={props => <AdminLayout {...props} />} />
-      </Switch>
-    </HashRouter>
-  </Provider>, document.getElementById('root'));
+  <AuthInfoProvider>{({isAuthenticated}) =>
+    <Provider store={store}>
+      <HashRouter>
+        <Switch>
+          <Route exact path="/login">
+            <LoginForm />
+          </Route>
+          <Route exact path="/">
+            <Redirect to="/portal" />
+          </Route>
+          <Route path="/" render={props => isAuthenticated ? <AdminLayout {...props} /> : <Redirect to="/login" />} />
+        </Switch>
+      </HashRouter>
+    </Provider>
+  }</AuthInfoProvider>, document.getElementById('root'));

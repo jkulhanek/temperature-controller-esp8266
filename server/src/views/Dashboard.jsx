@@ -17,6 +17,7 @@
 */
 import React, { Component } from "react";
 import ChartistGraph from "react-chartist";
+import { connect } from "react-redux";
 import { Grid, Row, Col } from "react-bootstrap";
 
 import { Card } from "/components/Card/Card.jsx";
@@ -37,6 +38,10 @@ import {
 import CurrentTemperature from "components/Temperature/CurrentTemperature";
 import Thermostat from "components/Temperature/Thermostat";
 import TemperatureControl from "components/Temperature/TemperatureControl";
+import TemperaturePlanUploader from "components/Temperature/TemperaturePlanUploader";
+import Toggle from "components/FormInputs/Toggle";
+import { putState, fetchState } from "actions";
+import DataComponent from "components/DataComponent/DataComponent";
 
 class Dashboard extends Component {
   createLegend(json) {
@@ -57,6 +62,32 @@ class Dashboard extends Component {
             <Col lg={3} sm={6}>
               <TemperatureControl />              
             </Col>
+            <Col lg={6} sm={6}>
+              <Card
+                title="Current Plan"
+                statsIcon=""
+                category="Upload or download current plan"
+                content={
+                  <TemperaturePlanUploader />
+                }
+              />
+            </Col>
+            <Col lg={3} sm={6}>
+              <DataComponent fetch={this.props.getIsOn} resource={this.props.isOn}>{
+                (resource, loading) => <Card
+                statsIcon="fa fa-clock-o"
+                title="Status"
+                category={(resource && resource.isOn ? "Running" : "Stopped")}
+                content={
+                  <Toggle 
+                    checked={resource && resource.isOn} 
+                    disabled={!loading}
+                    onChange={(e) => { this.props.setIsOn(e.checked); }} />
+                }
+              />}
+              </DataComponent>              
+            </Col>
+            {/*
             <Col lg={3} sm={6}>
               <StatsCard
                 bigIcon={<i className="pe-7s-server text-warning" />}
@@ -176,12 +207,17 @@ class Dashboard extends Component {
                   </div>
                 }
               />
-            </Col>
-          </Row>
+              </Col>*/}
+              </Row>
         </Grid>
       </div>
     );
   }
 }
 
-export default Dashboard;
+export default connect((state, oldProps) => Object.assign({}, oldProps, {
+  isOn: state.state,
+}), (dispatch, oldProps) => Object.assign({}, oldProps, {
+  setIsOn: (value) => dispatch(putState(value)),
+  getIsOn: () => dispatch(fetchState())
+}))(Dashboard);

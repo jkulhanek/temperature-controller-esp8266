@@ -36,14 +36,14 @@ export function Card(props) {
           style={props.overlay && {opacity:0} || {}}
         >
           {props.content}
-
+          {(props.legend || props.stats) &&
           <div className="footer">
             {props.legend}
             {props.stats != null ? <hr /> : ""}
             <div className="stats">
               <i className={props.statsIcon} /> {props.stats}
             </div>
-          </div>
+          </div>}
         </div>}
           {props.overlay && <div className="dialog">
             {props.overlay}

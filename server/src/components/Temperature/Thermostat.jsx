@@ -2,7 +2,13 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 function roundHalf(num) {
-    return (Math.round(num*2)/2).toFixed(1);
+    return (Math.round(num*2)/2);
+}
+
+function restrictToRange(val, min, max) {
+  if (val < min) return min;
+  if (val > max) return max;
+  return val;
 }
 
 function setClass(el, className, state) {
@@ -115,12 +121,6 @@ export default class Thermostat extends React.Component {
       );
     }
   
-    restrictToRange(val, min, max) {
-      if (val < min) return min;
-      if (val > max) return max;
-      return val;
-    }
-  
     mapLeafPoint(point, scale) {
       return isNaN(point) ? point : point * scale;
     }
@@ -139,10 +139,10 @@ export default class Thermostat extends React.Component {
 		
 		dragStart(ev) {
 			this.startDelay = setTimeout((function() {
-				this.setClass(this.svg, 'dial--edit', true);
+        this.setClass(this.svg, 'dial--edit', true);
 				this._drag.inProgress = true;
 				this._drag.startPoint = this.eventPosition(ev);
-				this._drag.startTemperature = this.props.targetTemperature || this.options.minValue;
+				this._drag.startTemperature = this.props.targetTemperature === undefined ? this.props.minValue : this.props.targetTemperature;
 				this._drag.lockAxis = undefined;
 			}).bind(this),1000);
 		};
@@ -184,9 +184,8 @@ export default class Thermostat extends React.Component {
 				dxy = (Math.abs(dy) > Math.abs(dx)) ? dy : dx;
 			};
       var dValue = (dxy*this.getSizeRatio())/(this.options.diameter)*this.properties.rangeValue;
-      let value = parseInt(roundHalf(this._drag.startTemperature+dValue));
-      value = Math.min(value, this.props.maxValue);
-      value = Math.max(value, this.props.minValue);
+      let value = roundHalf(this._drag.startTemperature+dValue);
+      value = restrictToRange(value, this.props.minValue, this.props.maxValue);
 			this.props.onChange && this.props.onChange(value);
     }
     
@@ -242,9 +241,9 @@ export default class Thermostat extends React.Component {
         actualMinValue = Math.min(this.props.ambientTemperature, targetTemperature);
         actualMaxValue = Math.max(this.props.ambientTemperature, targetTemperature);
       }
-      const min = this.restrictToRange(Math.round((actualMinValue - this.props.minValue)
+      const min = restrictToRange(Math.round((actualMinValue - this.props.minValue)
         / rangeValue * this.props.numTicks), 0, this.props.numTicks - 1);
-      const max = this.restrictToRange(Math.round((actualMaxValue - this.props.minValue)
+      const max = restrictToRange(Math.round((actualMaxValue - this.props.minValue)
         / rangeValue * this.props.numTicks), 0, this.props.numTicks - 1);
   
       // Renders the degree ticks around the outside of the thermostat.
@@ -297,7 +296,7 @@ export default class Thermostat extends React.Component {
         radius,
         ticksOuterRadius - (ticksOuterRadius - ticksInnerRadius) / 2,
       ];
-      const peggedValue = this.restrictToRange(
+      const peggedValue = restrictToRange(
         this.props.ambientTemperature,
         this.props.minValue,
         this.props.maxValue);
@@ -321,7 +320,7 @@ export default class Thermostat extends React.Component {
           <circle cx={radius} cy={radius} r={radius} style={styles.circle}></circle>
           <g>{tickArray}</g>
           <text x={radius} y={radius} style={styles.target}>
-            {roundHalf(targetTemperature)}
+            {roundHalf(targetTemperature).toFixed(1)}
           </text>
           <text x={ambientPosition[0]} y={ambientPosition[1]} style={styles.ambient}>
             {(this.props.ambientTemperature).toFixed(1)}
@@ -364,7 +363,7 @@ export default class Thermostat extends React.Component {
     height: '100%',
     width: '100%',
     numTicks: 100,
-    minValue: 10,
+    minValue: 0,
     maxValue: 30,
     away: false,
     leaf: false,

@@ -1,28 +1,53 @@
-import React, { Component } from "react";
-import { Row, Col } from "react-bootstrap";
+import React from "react";
+import ChartistGraph from "react-chartist";
 
 export default function TemperaturePlan(props) {
-    return <div className="card">
-        <div className="content">
-            <Row>
-                <Col xs={5}>
-                    <div className="icon-big text-center icon-warning">
-                        <i className="pe-7s-server text-warning" />
-                    </div>
-                </Col>
-                <Col xs={7}>
-                    <div className="numbers">
-                        <p>sdf</p>
-                        sdf
-                    </div>
-                </Col>
-            </Row>
-            <div className="footer">
-                <hr />
-                <div className="stats">
-                <i className="fa fa-refresh" /> updated now
-            </div>
-        </div>
-        </div>
+    let data = {
+        labels: [],
+        series: [[],[],[],[],[],[],[]]
+    }
+
+    for(var i = 0; i < 24;++i) {
+        //data.labels.push(i);
+        if(props.temperatures) {
+            for(var j = 0; j < 7; ++j) {
+                data.series[j][i] = props.temperatures[j * 24 + i];
+            }
+        }
+    }
+
+    return <div className="ct-chart">
+        <ChartistGraph
+            data={data}
+            type="Line"
+            options={{
+                low: 0,
+                high: 30,
+                showArea: false,
+                height: "245px",
+                axisX: {
+                  showGrid: false
+                },
+                lineSmooth: true,
+                showLine: true,
+                showPoint: true,
+                fullWidth: true,
+                chartPadding: {
+                  right: 50
+                }
+              }}
+            responsiveOptions={[
+                [
+                  "screen and (max-width: 640px)",
+                  {
+                    axisX: {
+                      labelInterpolationFnc: function(value) {
+                        return value[0];
+                      }
+                    }
+                  }
+                ]
+              ]}
+        />
     </div>
 }
