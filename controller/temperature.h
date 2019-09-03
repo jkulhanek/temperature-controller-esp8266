@@ -1,3 +1,5 @@
+#ifndef _temperature_h_
+#define _temperature_h_
 #include "settings.h"
 #include <time.h>
 
@@ -41,3 +43,5 @@ void invalidateCurrentUserTemperature() {
 float currentTemperature = 13.3;
 void invalidateCurrentTemperature() {
 }
+
+#endif

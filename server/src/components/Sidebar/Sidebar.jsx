@@ -57,7 +57,7 @@ class Sidebar extends Component {
           )}
         <div className="logo">
           <a
-            href="https://www.creative-tim.com?ref=lbd-sidebar"
+            href="#"
             className="simple-text logo-mini"
           >
             <div className="logo-img">
@@ -65,15 +65,14 @@ class Sidebar extends Component {
             </div>
           </a>
           <a
-            href="https://www.creative-tim.com?ref=lbd-sidebar"
+            href="#"
             className="simple-text logo-normal"
           >
-            Creative Tim
+            Kulhankovi
           </a>
         </div>
         <div className="sidebar-wrapper">
           <ul className="nav">
-            {this.state.width <= 991 ? <AdminNavbarLinks /> : null}
             {this.props.routes.map((prop, key) => {
               if (!prop.redirect)
                 return (
@@ -97,6 +96,7 @@ class Sidebar extends Component {
                 );
               return null;
             })}
+            {this.state.width <= 991 ? <AdminNavbarLinks /> : null}
           </ul>
         </div>
       </div>

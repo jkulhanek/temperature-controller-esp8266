@@ -5,7 +5,9 @@
 
 #include "common.h"
 #include "display.h"
+#include "thermostat.h"
 #include "server.h"
+#include "analytics.h"
 #include "settings.h"
 
 int timezone = 3;
@@ -16,6 +18,7 @@ bool initialized = false;
 
 const char* ssid = STASSID;
 const char* password = STAPSK;
+const uint8_t thermostat_pin = D5;
 
 view_t view;
 
@@ -75,6 +78,10 @@ void setup() {
         delay(1000);
     }
     Serial.println("");
+
+    initializeAnalytics();
+    thermostat.initialize(thermostat_pin);
+
     initialized = true;
 }
 
@@ -103,6 +110,7 @@ void loop() {
         oldSec = mill / 1000;
     }
 
+    thermostat.update(mill);
     server.handleClient();
     MDNS.update();
 }
