@@ -18,8 +18,7 @@ bool initialized = false;
 
 const char* ssid = STASSID;
 const char* password = STAPSK;
-const uint8_t thermostat_pin = D5;
-
+const char* emptyTemperature = "--.-";
 view_t view;
 
 void updateView(view_t *view) {
@@ -27,8 +26,16 @@ void updateView(view_t *view) {
     settings_t * settings = getSettings();
     strftime(view->time, sizeof(view->time), "%H:%M:%S", localtime(&now));
     view->is_on = settings->isOn;
-    dtostrf(currentUserTemperature, 4, 1, view->thermostat_temperature);
-    dtostrf(currentTemperature, 4, 1, view->temperature);
+    float temp;
+    if(thermostat.getUserTemperature(&temp))
+        dtostrf(temp, 4, 1, view->thermostat_temperature);
+    else
+        memcpy(view->thermostat_temperature, emptyTemperature, sizeof(emptyTemperature));
+
+    if(thermostat.getCurrentTemperature(&temp))        
+        dtostrf(temp, 4, 1, view->temperature);
+    else
+        memcpy(view->temperature, emptyTemperature, sizeof(emptyTemperature));
 }
 
 void setup() {
@@ -80,7 +87,7 @@ void setup() {
     Serial.println("");
 
     initializeAnalytics();
-    thermostat.initialize(thermostat_pin);
+    thermostat.initialize();
 
     initialized = true;
 }
@@ -94,10 +101,7 @@ void loop() {
 
     // Do connection update every minute
     if(oldFullSync != mill / 60 * 1000) {
-        // update temperature
-        invalidateCurrentUserTemperature();
-        invalidateCurrentTemperature();
-
+        
         // check wifi status
         view.is_connected = WiFi.status() == WL_CONNECTED;
         oldFullSync = mill / 60 * 1000;

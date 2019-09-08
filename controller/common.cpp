@@ -14,3 +14,11 @@ bool parseDateTime(const char * text, time_t * time) {
 void formatDateTime(const time_t * time, char * text) {
     strftime(text, sizeof(text), "%FT%TZ", gmtime(time));
 }
+
+float decompressTemperature(unsigned char tmp) {
+    return tmp / 2.0;
+}
+
+unsigned char compressTemperature(float tmp) {
+    return (unsigned char)(tmp * 2);
+}

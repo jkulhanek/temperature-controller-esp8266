@@ -1,5 +1,5 @@
-#ifndef _analytics_h
-#define _analytics_h
+#ifndef _analytics_h_
+#define _analytics_h_
 
 #include <time.h>
 bool initializeAnalytics();

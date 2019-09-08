@@ -15,7 +15,6 @@
 #include <ArduinoJson.h>
 #include <time.h>
 #include "settings.h"
-#include "temperature.h"
 
 #ifdef HTTPS
 ESP8266WebServerSecure server(443);
@@ -253,7 +252,7 @@ void handleTemporaryTemperature() {
     auto method = server.method();
     if(method == HTTP_GET) {
         settings_t * settings = getSettings();
-        if(!validateTemporaryTemperature(&now)) {
+        if(!thermostat.validateTemporaryTemperature(&now)) {
             server.send(200, "application/json", "null");
         } else {
             char timeStr[DATETIME_LENGTH];
@@ -290,7 +289,7 @@ void handleTemporaryTemperature() {
             return;
         }
         server.send(200, "application/json", "");
-        invalidateCurrentUserTemperature();
+        thermostat.invalidateCurrentUserTemperature();
         return;
     }
 
@@ -350,7 +349,7 @@ void handleCurrentPlan() {
             return;
         }
         server.send(200, "application/json", "");
-        invalidateCurrentUserTemperature();
+        thermostat.invalidateCurrentUserTemperature();
         return;
     }
 
@@ -381,7 +380,7 @@ void handleOn() {
             Serial.println("Cannot save settings");
             return;
         }
-        invalidateCurrentUserTemperature();
+        thermostat.invalidateCurrentUserTemperature();
     } else {
         server.send(403, "text/plain", "Forbidden");
         return;
@@ -405,14 +404,20 @@ void handleCurrentTemperature() {
 
     char timeStr[DATETIME_LENGTH];
     time_t now;
+    float temp;
     time(&now);
     strftime(timeStr, sizeof(timeStr), "%FT%TZ", gmtime(&now));
     String json("{\"time\":\"");
     json += timeStr;
-    json += "\",\"temperature\":";
-    json += currentTemperature;
-    json += ",\"userTemperature\":";
-    json += currentUserTemperature;
+    if(thermostat.getCurrentTemperature(&temp)) {
+        json += "\",\"temperature\":";
+        json += temp;
+    }
+    if(thermostat.getUserTemperature(&temp)) {
+        json += "\",\"userTemperature\":";
+        json += temp;
+    }
+
     json += "}";
     server.send(200, "application/json", json);
 }

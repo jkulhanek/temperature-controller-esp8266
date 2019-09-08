@@ -1,5 +1,5 @@
-#ifndef _common_h
-#define _common_h
+#ifndef _common_h_
+#define _common_h_
 #define DATETIME_LENGTH sizeof("2011-10-08T07:07:09Z")
 #define STASSID "Kulhankovi"
 #define STAPSK  "highwaytohell"
@@ -17,6 +17,9 @@ typedef struct {
 bool parseDateTime(const char * text, time_t * time);
 
 void formatDateTime(const time_t * time, char * text);
+
+float decompressTemperature(unsigned char tmp);
+unsigned char compressTemperature(float tmp);
 
 
 #endif

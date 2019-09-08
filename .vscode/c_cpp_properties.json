@@ -13,7 +13,9 @@
             "/opt/arduino-1.8.9/libraries/**",
             "/home/jonas/Documents/Arduino/hardware/tools/**",
             "/home/jonas/Documents/Arduino/libraries/**",
-            "/home/jonas/Arduino/libraries/ArduinoJson/src/**"
+            "/home/jonas/Arduino/libraries/ArduinoJson/src/**",
+            "/home/jonas/Arduino/libraries/DallasTemperature/**",
+            "/home/jonas/Arduino/libraries/OneWire/**"
         ],
         "forcedInclude": [],
         "intelliSenseMode": "clang-x64",
