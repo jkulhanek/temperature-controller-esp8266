@@ -1,7 +1,7 @@
 #ifndef _server_h
 #define _server_h
 #define DATETIME_LENGTH sizeof("2011-10-08T07:07:09Z")
-#define HTTPS
+#define HTTP
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
@@ -409,15 +409,17 @@ void handleCurrentTemperature() {
     strftime(timeStr, sizeof(timeStr), "%FT%TZ", gmtime(&now));
     String json("{\"time\":\"");
     json += timeStr;
-    if(thermostat.getCurrentTemperature(&temp)) {
-        json += "\",\"temperature\":";
+    json += "\"";
+    json += ",\"temperature\":";
+    if(thermostat.getCurrentTemperature(&temp))
+        json += temp;  
+    else
+        json += "null";
+    json += ",\"userTemperature\":";
+    if(thermostat.getUserTemperature(&temp))
         json += temp;
-    }
-    if(thermostat.getUserTemperature(&temp)) {
-        json += "\",\"userTemperature\":";
-        json += temp;
-    }
-
+    else
+        json += "null";
     json += "}";
     server.send(200, "application/json", json);
 }

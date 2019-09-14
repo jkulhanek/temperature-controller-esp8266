@@ -1,5 +1,7 @@
 import { combineReducers } from 'redux';
 import { toSnakeCase } from 'utils';
+import {reducer as notifications} from 'react-notification-system-redux';
+
 
 function resourceReducer(name) {
     const sname = toSnakeCase(name);
@@ -114,6 +116,7 @@ export default function rootReducer(state, action) {
     }
 
     return putTemporaryTemperature(Object.assign({}, state, {
+        notifications: notifications(state.notifications, action),
         temporaryTemperature: temporaryTemperatureRepository(state.temporaryTemperature, action),
         currentTemperature: currentTemperature(state.currentTemperature, action),
         state: stateRepository(state.state, action),

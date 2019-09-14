@@ -1,16 +1,25 @@
 import {apiPath} from "configuration";
 import authentication from "authentication";
+import { error } from 'react-notification-system-redux';
+
 
 function toSnakeCase(s) {
     return s.replace(/\.?([A-Z])/g, function (x,y){return "_" + y}).replace(/^_/, "").toUpperCase();
 }
 
-function handleError(res) {
-    if(!res.ok) {
-        throw Error(res.statusText);
-    }
+function handleError(dispatch) {
+    return function(res) {
+        if(!res.ok) {
+            dispatch(error({
+                autoDismiss: 5,
+                message: "Could not fetch resource because of an network error",
+            }));
+            console.error(res);
+            throw Error(res.statusText);
+        }
 
-    return res;
+        return res;
+    }
 }
 
 export function fetchTemporaryTemperature() {
@@ -36,7 +45,7 @@ export function fetchTemporaryTemperature() {
     return (dispatch, getState) => {
         dispatch(fetchStarted());
         return authentication.authorizedFetch(apiPath + "/temporaryTemperature", { cache: 'no-cache', mode: 'cors' })
-            .then(handleError)
+            .then(handleError(dispatch))
             .then(response => response.json())
             .then(json => {
                 dispatch(fetchCompleted(json));
@@ -69,7 +78,7 @@ export function fetchCurrentTemperature() {
     return (dispatch, getState) => {
         dispatch(fetchStarted());
         return authentication.authorizedFetch(apiPath + "/temperature", { cache: 'no-cache', mode: 'cors' })
-            .then(handleError)
+            .then(handleError(dispatch))
             .then(response => response.json())
             .then(json => {
                 dispatch(fetchCompleted(json));
@@ -102,7 +111,7 @@ export function fetchState() {
     return (dispatch, getState) => {
         dispatch(fetchStarted());
         return authentication.authorizedFetch(apiPath + "/on", { cache: 'no-cache', mode: 'cors' })
-            .then(handleError)
+            .then(handleError(dispatch))
             .then(response => response.json())
             .then(json => {
                 dispatch(fetchCompleted(json));
@@ -135,7 +144,7 @@ export function fetchCurrentPlan() {
     return (dispatch, getState) => {
         dispatch(fetchStarted());
         return authentication.authorizedFetch(apiPath + "/plan", { cache: 'no-cache', mode: 'cors' })
-            .then(handleError)
+            .then(handleError(dispatch))
             .then(response => response.json())
             .then(json => {
                 dispatch(fetchCompleted({
@@ -165,7 +174,7 @@ export function putTemporaryTemperature(temperature, duration) {
             referrer: 'no-referrer',
             body: JSON.stringify({ temperature, duration, start: now }),
         })
-        .then(handleError)
+        .then(handleError(dispatch))
         .then(() => {
             dispatch({type: "POST_" + sname + "_COMPLETED", payload: {temperature, duration, now}});
             return {temperature, duration, now};
@@ -195,7 +204,7 @@ export function putCurrentPlan(plan) {
                 plan: plan.temperatures,
             }),
         })
-        .then(handleError)
+        .then(handleError(dispatch))
         .then(() => {
             dispatch({type: "POST_" + sname + "_COMPLETED"});
             dispatch(fetchCurrentTemperature());
@@ -223,7 +232,7 @@ export function putState(on) {
             referrer: 'no-referrer',
             body: JSON.stringify({ isOn: on }),
         })
-        .then(handleError)
+        .then(handleError(dispatch))
         .then(response => response.json())
         .then((json) => {
             dispatch({type: "POST_" + sname + "_COMPLETED", payload: json});

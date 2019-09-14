@@ -12,23 +12,36 @@
 #define THERMOSTAT_PIN D5
 #define THERMOMETER_WIRE D6
 
+OneWire thermostatWire(THERMOMETER_WIRE);
+DallasTemperature sensors(&thermostatWire);
+uint8_t deviceAddress;
+
 class Thermostat {
     public:
-    Thermostat() : lastUpdate(0), lastChange(0), isOn(false), isHeating(false), hasCurrentTemperature(false), hasUserTemperature(false), wire(THERMOMETER_WIRE) {
-        dallasTemperature.setOneWire(&this->wire);
+    Thermostat() {
+        
     };
 
     void update(unsigned long millis);
     bool initialize() {
+        this->lastUpdate = 0;
+        this->lastChange = 0;
+        this->isOn = false;
+        this->isHeating = false;
+        this->hasCurrentTemperature = false;
+        this->hasUserTemperature = false;
+
         pinMode(THERMOSTAT_PIN, OUTPUT);
-        this->dallasTemperature.begin();
-        if(!this->dallasTemperature.getAddress(&this->address, 0)) {
+        sensors.begin();
+
+        if(!sensors.getAddress(&deviceAddress, 0)) {
             logging::logError("Cannot initialize dallas temperature because no sensor was found on address 0");
             return false;
         }
 
-        this->dallasTemperature.setResolution(&this->address, 12);
-        this->dallasTemperature.requestTemperaturesByAddress(&this->address);
+        Serial.println("found thermostat device");
+        sensors.setResolution(&deviceAddress, 12);
+        sensors.requestTemperaturesByAddress(&deviceAddress);
         return true;
     }
 
@@ -58,11 +71,7 @@ class Thermostat {
 
     void updateTemperature(unsigned long millis);
     void updateHeatingState(unsigned long millis);
-    float computeCurrentUserTemperature(const time_t * now);
-    OneWire wire;
-    DallasTemperature dallasTemperature;
-    uint8_t address;
-    
+    float computeCurrentUserTemperature(const time_t * now);   
 };
 
 bool Thermostat::validateTemporaryTemperature(const time_t * time) {
@@ -94,9 +103,12 @@ void Thermostat::invalidateCurrentUserTemperature() {
 }
 
 void Thermostat::updateTemperature(unsigned long millis) {
-    this->_currentTemperature = this->dallasTemperature.getTempC(&this->address);
-    this->dallasTemperature.requestTemperaturesByAddress(&this->address);
+    this->_currentTemperature = sensors.getTempC(&deviceAddress);
+    sensors.requestTemperaturesByAddress(&deviceAddress);
     this->hasCurrentTemperature = true;
+    Serial.print("Current temperature is: ");
+    Serial.print(this->_currentTemperature);
+    Serial.println("°C");
 
     this->invalidateCurrentUserTemperature();
     this->hasUserTemperature = true;
@@ -128,7 +140,10 @@ void Thermostat::updateHeatingState(unsigned long millis) {
 }
 
 void Thermostat::update(unsigned long millis) {
-    if(millis <= this->lastUpdate + UPDATE_INTERVAL) return;
+    if(millis <= this->lastUpdate + UPDATE_INTERVAL) {
+        return;
+    }
+    this->lastUpdate = millis;
     this->updateTemperature(millis);
     this->updateHeatingState(millis);
 }

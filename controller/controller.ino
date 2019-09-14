@@ -10,7 +10,7 @@
 #include "analytics.h"
 #include "settings.h"
 
-int timezone = 3;
+int timezone = 2;
 int dst = 0;
 unsigned int oldSec = 10000; // Arbitrary number
 unsigned int oldFullSync = 10000; // Arbitrary number
@@ -78,7 +78,7 @@ void setup() {
     printLoadingStatus("synchronizing time");
 
     // Download time
-    configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+    configTime(timezone * 3600, 0, "pool.ntp.org", "time.nist.gov");
     Serial.println("\nWaiting for time");
     while (!time(nullptr)) {
         Serial.print(".");
