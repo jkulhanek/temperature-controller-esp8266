@@ -11,6 +11,7 @@ typedef struct {
     char temperature[5];
     bool is_connected;
     bool is_on;
+    bool is_heating;
 } view_t;
 
 

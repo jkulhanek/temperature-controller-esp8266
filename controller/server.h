@@ -392,8 +392,12 @@ void handleOn() {
 
 void handleLogin() {
     if(handleHttpOptions()) return;
-    if(handleAuthentication()) return;
-    server.send(200, "text/plain", "Logged in");
+    if(server.authenticate(www_username, www_password)) {
+        server.send(200, "text/plain", "valid");
+    }
+    else {
+        server.send(200, "text/plain", "invalid");
+    }    
     return;
 }
 

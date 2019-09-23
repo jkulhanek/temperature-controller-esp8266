@@ -44,6 +44,10 @@ void render(const view_t *view) {
         display.print(view->thermostat_temperature);
     }
 
+    if(view->is_heating) {
+        display.drawBitmap(85, 30, icons::flame, 32, 32, WHITE);
+    }
+
 
     display.display();
     display.clearDisplay();

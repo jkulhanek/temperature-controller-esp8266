@@ -15,7 +15,8 @@
             "/home/jonas/Documents/Arduino/libraries/**",
             "/home/jonas/Arduino/libraries/ArduinoJson/src/**",
             "/home/jonas/Arduino/libraries/DallasTemperature/**",
-            "/home/jonas/Arduino/libraries/OneWire/**"
+            "/home/jonas/Arduino/libraries/OneWire/**",
+            "/home/jonas/Arduino/libraries/Adafruit_SSD1306/**"
         ],
         "forcedInclude": [],
         "intelliSenseMode": "clang-x64",

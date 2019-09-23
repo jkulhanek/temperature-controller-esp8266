@@ -77,15 +77,19 @@ class Authentication {
         });
 
         if(response.status === 200) {
-            this._username = username;
-            this._password = password;
-            localStorage.setItem("username", username);
-            localStorage.setItem("password", password);
-            this._isAuthenticated = true;
-            this._updateProviders();
-            return true;
-        } else if(response.status === 401) {
-            return false;
+            let result = (await response.text()) == "valid";
+            if(result) {
+                this._username = username;
+                this._password = password;
+                localStorage.setItem("username", username);
+                localStorage.setItem("password", password);
+                this._isAuthenticated = true;
+                this._updateProviders();
+                return true;
+            }
+            else {
+                return false;
+            }
         } else {
             throw Error(response.statusText);
         }

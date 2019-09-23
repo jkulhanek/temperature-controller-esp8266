@@ -30,8 +30,9 @@ class Thermostat {
         this->isHeating = false;
         this->hasCurrentTemperature = false;
         this->hasUserTemperature = false;
-
+        this->pin = THERMOSTAT_PIN;
         pinMode(THERMOSTAT_PIN, OUTPUT);
+        
         sensors.begin();
 
         if(!sensors.getAddress(&deviceAddress, 0)) {
@@ -50,6 +51,10 @@ class Thermostat {
         return this->hasUserTemperature;
     }
 
+    bool getIsHeating() const {
+        return this->isHeating;
+    }
+
     bool getCurrentTemperature(float * temp) const {
         *temp = this->_currentTemperature;
         return this->hasCurrentTemperature;
@@ -60,7 +65,8 @@ class Thermostat {
 
     private:
     unsigned long lastUpdate;
-    unsigned long lastChange;    
+    unsigned long lastChange;
+    unsigned long lastChangeWriteStarted;
     float _currentTemperature;
     float _currentUserTemperature;
     uint8_t pin;
@@ -68,6 +74,8 @@ class Thermostat {
     bool hasCurrentTemperature;
     bool isOn;
     bool isHeating;
+    bool changeWriteStarted;
+    bool initialStatusChanged;
 
     void updateTemperature(unsigned long millis);
     void updateHeatingState(unsigned long millis);
@@ -127,9 +135,17 @@ void Thermostat::updateHeatingState(unsigned long millis) {
     if(!this->hasCurrentTemperature || !this->hasUserTemperature) return;
 
     bool heating = this->isOn && this->_currentTemperature < this->_currentUserTemperature;
-    if(heating != this->isHeating) {
+    if(!initialStatusChanged || heating != this->isHeating) {
+        this->lastChange = millis;
         this->isHeating = heating;
-        digitalWrite(this->pin, HIGH);
+        initialStatusChanged = true;
+
+        // Do physical switch
+        digitalWrite(D5, heating ? HIGH : LOW);
+        digitalWrite(D4, heating ? LOW : HIGH);
+        lastChangeWriteStarted = millis;
+        changeWriteStarted = true;
+
         if(heating) {
             logHeatingStarted();
         }
@@ -140,6 +156,12 @@ void Thermostat::updateHeatingState(unsigned long millis) {
 }
 
 void Thermostat::update(unsigned long millis) {
+    if(this->changeWriteStarted && millis >= this->lastChangeWriteStarted + 500) {
+        digitalWrite(D4, LOW);
+        digitalWrite(D5, LOW);
+        this->changeWriteStarted = false;
+    }
+
     if(millis <= this->lastUpdate + UPDATE_INTERVAL) {
         return;
     }

@@ -36,6 +36,8 @@ void updateView(view_t *view) {
         dtostrf(temp, 4, 1, view->temperature);
     else
         memcpy(view->temperature, emptyTemperature, sizeof(emptyTemperature));
+    
+    view->is_heating = thermostat.getIsHeating();
 }
 
 void setup() {
