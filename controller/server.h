@@ -290,6 +290,7 @@ void handleTemporaryTemperature() {
         }
         server.send(200, "application/json", "");
         thermostat.invalidateCurrentUserTemperature();
+        thermostat.force_update();
         return;
     }
 
@@ -350,6 +351,7 @@ void handleCurrentPlan() {
         }
         server.send(200, "application/json", "");
         thermostat.invalidateCurrentUserTemperature();
+        thermostat.force_update();
         return;
     }
 
@@ -381,6 +383,7 @@ void handleOn() {
             return;
         }
         thermostat.invalidateCurrentUserTemperature();
+        thermostat.force_update();
     } else {
         server.send(403, "text/plain", "Forbidden");
         return;

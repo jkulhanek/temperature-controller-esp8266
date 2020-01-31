@@ -9,7 +9,6 @@
 #include "logging.h"
 #define UPDATE_INTERVAL 5000
 #define CHANGE_INTERVAL 15 * 60 * 1000 // Changes after 15 minutes
-#define THERMOSTAT_PIN D5
 #define THERMOMETER_WIRE D6
 
 OneWire thermostatWire(THERMOMETER_WIRE);
@@ -30,8 +29,8 @@ class Thermostat {
         this->isHeating = false;
         this->hasCurrentTemperature = false;
         this->hasUserTemperature = false;
-        this->pin = THERMOSTAT_PIN;
-        pinMode(THERMOSTAT_PIN, OUTPUT);
+        pinMode(D4, OUTPUT);
+        pinMode(D5, OUTPUT);
         
         sensors.begin();
 
@@ -62,6 +61,7 @@ class Thermostat {
 
     void invalidateCurrentUserTemperature();
     bool validateTemporaryTemperature(const time_t * time);
+    void force_update();
 
     private:
     unsigned long lastUpdate;
@@ -69,17 +69,17 @@ class Thermostat {
     unsigned long lastChangeWriteStarted;
     float _currentTemperature;
     float _currentUserTemperature;
-    uint8_t pin;
     bool hasUserTemperature;
     bool hasCurrentTemperature;
     bool isOn;
     bool isHeating;
     bool changeWriteStarted;
     bool initialStatusChanged;
+    bool _forceUpdate;
 
     void updateTemperature(unsigned long millis);
     void updateHeatingState(unsigned long millis);
-    float computeCurrentUserTemperature(const time_t * now);   
+    float computeCurrentUserTemperature(const time_t * now);  
 };
 
 bool Thermostat::validateTemporaryTemperature(const time_t * time) {
@@ -162,12 +162,17 @@ void Thermostat::update(unsigned long millis) {
         this->changeWriteStarted = false;
     }
 
-    if(millis <= this->lastUpdate + UPDATE_INTERVAL) {
+    if(millis <= this->lastUpdate + UPDATE_INTERVAL && !_forceUpdate) {
         return;
     }
     this->lastUpdate = millis;
     this->updateTemperature(millis);
     this->updateHeatingState(millis);
+    _forceUpdate = false;
+}
+
+void Thermostat::force_update() {
+    this->_forceUpdate = true;
 }
 
 Thermostat thermostat;
