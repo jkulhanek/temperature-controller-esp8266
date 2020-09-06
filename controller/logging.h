@@ -2,6 +2,6 @@
 #define _logging_h_
 
 namespace logging {
-    void logError(char * message);
+    void logError(const char * message);
 }
 #endif

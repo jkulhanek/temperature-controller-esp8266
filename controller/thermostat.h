@@ -1,14 +1,13 @@
-#ifndef _thermostat_h_
-#define _thermostat_h_
+#ifndef thermostat_h_
+#define thermostat_h_
 #include <Arduino.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <time.h>
 #include "settings.h"
-#include "analytics.h"
 #include "logging.h"
 #define UPDATE_INTERVAL 5000
-#define CHANGE_INTERVAL 15 * 60 * 1000 // Changes after 15 minutes
+#define CHANGE_INTERVAL 2 * 60 * 1000 // Changes after 2 minutes
 #define THERMOMETER_WIRE D6
 
 OneWire thermostatWire(THERMOMETER_WIRE);
@@ -18,11 +17,17 @@ uint8_t deviceAddress;
 class Thermostat {
     public:
     Thermostat() {
-        
     };
 
+    void bindOutput() {
+        pinMode(D4, OUTPUT);
+        pinMode(D5, OUTPUT);
+        digitalWrite(D5, HIGH);
+    }
+
     void update(unsigned long millis);
-    bool initialize() {
+    bool initialize(void (*invalidateHeatingState)()) {
+        this->invalidateHeatingState = invalidateHeatingState;
         this->lastUpdate = 0;
         this->lastChange = 0;
         this->isOn = false;
@@ -62,18 +67,17 @@ class Thermostat {
     void invalidateCurrentUserTemperature();
     bool validateTemporaryTemperature(const time_t * time);
     void force_update();
+    bool isHeating;
 
     private:
+    void (*invalidateHeatingState)();
     unsigned long lastUpdate;
     unsigned long lastChange;
-    unsigned long lastChangeWriteStarted;
     float _currentTemperature;
     float _currentUserTemperature;
     bool hasUserTemperature;
     bool hasCurrentTemperature;
     bool isOn;
-    bool isHeating;
-    bool changeWriteStarted;
     bool initialStatusChanged;
     bool _forceUpdate;
 
@@ -113,7 +117,10 @@ void Thermostat::invalidateCurrentUserTemperature() {
 void Thermostat::updateTemperature(unsigned long millis) {
     this->_currentTemperature = sensors.getTempC(&deviceAddress);
     sensors.requestTemperaturesByAddress(&deviceAddress);
-    this->hasCurrentTemperature = true;
+    if(this->_currentTemperature <= 50.0f) {
+        this->hasCurrentTemperature = true;
+    }
+
     Serial.print("Current temperature is: ");
     Serial.print(this->_currentTemperature);
     Serial.println("°C");
@@ -134,34 +141,29 @@ void Thermostat::updateHeatingState(unsigned long millis) {
     if(millis <= this->lastChange + CHANGE_INTERVAL && this->lastChange != 0) return;
     if(!this->hasCurrentTemperature || !this->hasUserTemperature) return;
 
-    bool heating = this->isOn && this->_currentTemperature < this->_currentUserTemperature;
+    bool heating = false;
+    if(this->isOn) {
+        heating = this->isHeating;
+        if(!this->isHeating && this->_currentTemperature < this->_currentUserTemperature) {
+            heating = true;
+        }
+        if(this->isHeating && this->_currentTemperature >= this->_currentUserTemperature + 1) {
+            heating = false;
+        }
+    }
+
     if(!initialStatusChanged || heating != this->isHeating) {
         this->lastChange = millis;
         this->isHeating = heating;
         initialStatusChanged = true;
 
         // Do physical switch
-        digitalWrite(D5, heating ? HIGH : LOW);
-        digitalWrite(D4, heating ? LOW : HIGH);
-        lastChangeWriteStarted = millis;
-        changeWriteStarted = true;
-
-        if(heating) {
-            logHeatingStarted();
-        }
-        else {
-            logHeatingFinished();
-        }
+        digitalWrite(D5, heating ? LOW : HIGH);
+        this->invalidateHeatingState();
     }
 }
 
 void Thermostat::update(unsigned long millis) {
-    if(this->changeWriteStarted && millis >= this->lastChangeWriteStarted + 500) {
-        digitalWrite(D4, LOW);
-        digitalWrite(D5, LOW);
-        this->changeWriteStarted = false;
-    }
-
     if(millis <= this->lastUpdate + UPDATE_INTERVAL && !_forceUpdate) {
         return;
     }

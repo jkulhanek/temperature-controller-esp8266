@@ -1,6 +1,5 @@
 #ifndef _server_h
 #define _server_h
-#define DATETIME_LENGTH sizeof("2011-10-08T07:07:09Z")
 #define HTTP
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
@@ -15,6 +14,7 @@
 #include <ArduinoJson.h>
 #include <time.h>
 #include "settings.h"
+#include "common.h"
 
 #ifdef HTTPS
 ESP8266WebServerSecure server(443);
@@ -61,7 +61,7 @@ ESP8266WebServer server(80);
 #endif
 
 const char* www_username = "admin";
-const char* www_password = "esp8266";
+const char* www_password = "topeni";
 const char* www_realm = "Custom Auth Realm";
 String authFailResponse = "Authentication Failed";
 

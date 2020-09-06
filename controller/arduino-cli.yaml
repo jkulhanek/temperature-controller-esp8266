@@ -1,0 +1,16 @@
+board_manager:
+  additional_urls:
+    - http://arduino.esp8266.com/stable/package_esp8266com_index.json
+daemon:
+  port: "50051"
+directories:
+  data: /home/jonas/.arduino15
+  downloads: /home/jonas/.arduino15/staging
+  user: /home/jonas/Arduino
+logging:
+  file: ""
+  format: text
+  level: info
+telemetry:
+  addr: :9090
+  enabled: true

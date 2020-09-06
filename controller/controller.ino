@@ -20,6 +20,7 @@ const char* ssid = STASSID;
 const char* password = STAPSK;
 const char* emptyTemperature = "--.-";
 view_t view;
+Analytics analytics;
 
 void updateView(view_t *view) {
     time_t now = time(nullptr);
@@ -40,7 +41,24 @@ void updateView(view_t *view) {
     view->is_heating = thermostat.getIsHeating();
 }
 
+void invalidateHeatingState() {
+    analytics.invalidateHeatingState();
+}
+
+
+bool hasTime() {
+    if(!time(nullptr))
+        return false; 
+    time_t timer;
+    time(&timer);
+    if(timer < 3600 * 24 * 356) {
+        return false;
+    }
+    return true;
+}
+
 void setup() {
+    thermostat.bindOutput(); 
     Serial.begin(115200);
     Serial.setDebugOutput(true);
 
@@ -82,14 +100,14 @@ void setup() {
     // Download time
     configTime(timezone * 3600, 0, "pool.ntp.org", "time.nist.gov");
     Serial.println("\nWaiting for time");
-    while (!time(nullptr)) {
+    while (!hasTime()) {
         Serial.print(".");
         delay(1000);
     }
     Serial.println("");
 
-    initializeAnalytics();
-    thermostat.initialize();
+    analytics.initialize();
+    thermostat.initialize(&invalidateHeatingState);
 
     initialized = true;
 }
@@ -117,6 +135,7 @@ void loop() {
     }
 
     thermostat.update(mill);
+    analytics.update(mill);
     server.handleClient();
     MDNS.update();
 }
