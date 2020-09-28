@@ -105,7 +105,11 @@ float Thermostat::computeCurrentUserTemperature(const time_t * now) {
     }
 
     auto localnow = localtime(now);
-    return decompressTemperature(settings->currentPlan[localnow->tm_wday * 24 + localnow->tm_hour]);
+    auto temperature = localnow->tm_wday * 48 + localnow->tm_hour * 2;
+    if (localnow->tm_min >= 30) {
+        temperature += 1;
+    }
+    return decompressTemperature(settings->currentPlan[temperature]);
 }
 
 void Thermostat::invalidateCurrentUserTemperature() {
@@ -115,11 +119,21 @@ void Thermostat::invalidateCurrentUserTemperature() {
 }
 
 void Thermostat::updateTemperature(unsigned long millis) {
-    this->_currentTemperature = sensors.getTempC(&deviceAddress);
+    float temp = sensors.getTempC(&deviceAddress);
     sensors.requestTemperaturesByAddress(&deviceAddress);
-    if(this->_currentTemperature <= 50.0f) {
-        this->hasCurrentTemperature = true;
+    if(temp > 50.0f) {
+        return;
     }
+
+    temp -= 1.0f; // Calibration
+    if(this->hasCurrentTemperature) {
+        // Exponential weighting
+        float weightRatio = 0.82;
+        this->_currentTemperature = weightRatio * this->_currentTemperature + (1 - weightRatio) * temp;
+    }
+    else
+        this->_currentTemperature = temp;
+    this->hasCurrentTemperature = true;
 
     Serial.print("Current temperature is: ");
     Serial.print(this->_currentTemperature);

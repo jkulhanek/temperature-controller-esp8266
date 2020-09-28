@@ -17,7 +17,7 @@ typedef struct {
     temporaryTemperature_t temporaryTemperature;
     int currentPlanId;
     bool isOn;
-    unsigned char currentPlan[24*7];
+    unsigned char currentPlan[2*24*7];
 } settings_t;
 
 bool saveSettings();

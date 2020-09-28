@@ -9,7 +9,7 @@ settings_t settings;
 
 void createDefaultConfiguration() {
     settings.currentPlanId = -1;
-    for(uint16_t i = 0; i < 24 * 7; ++i) {
+    for(uint16_t i = 0; i < 2 * 24 * 7; ++i) {
         settings.currentPlan[i] = 0;
     }
 

@@ -317,11 +317,11 @@ void handleCurrentPlan() {
         plan += settings->currentPlanId;
         plan += ",\"plan\":[";
         unsigned int i;
-        for(i=0;i<7*24 - 1;++i) {
+        for(i=0;i<2*7*24;++i) {
             plan += decompressTemperature(settings->currentPlan[i]);
-            plan += ",";
+            if(i != 2 * 7 * 24 - 1)
+                plan += ",";
         }
-        plan += settings->currentPlan[i];
         plan += "]}";
         server.send(200, "application/json", plan);
         return;
@@ -338,7 +338,7 @@ void handleCurrentPlan() {
             int planId = doc["currentPlanId"];
             JsonArray plan = doc["plan"];
             settings_t * settings = getSettings();
-            for(unsigned int i=0;i<7*24;++i) {
+            for(unsigned int i=0;i<2*7*24;++i) {
                 settings->currentPlan[i] = compressTemperature(plan[i]);
             }
             settings->currentPlanId = planId;

@@ -9,7 +9,7 @@ class SetTemporaryTemperature extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            duration: "18000",
+            duration: "7200",
         }
     }
 
@@ -28,6 +28,8 @@ class SetTemporaryTemperature extends React.Component {
                         <option value="7200">2 hours</option>
                         <option value="10800">3 hours</option>
                         <option value="18000">5 hours</option>
+                        <option value="28800">8 hours</option>
+                        <option value="43200">12 hours</option>
                     </select>
                 </div>                        
             </Col>

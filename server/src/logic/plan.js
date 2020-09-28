@@ -11,7 +11,7 @@ export async function readExcelFile(file, filename) {
 
     let plan = [];
     for(let i = 0; i < 7; ++i) {
-        let row = worksheet.getRow(i + 2);
+        let row = worksheet.getRow(((i + 6) % 7) + 2);
         Array.prototype.push.apply(plan, row.values.slice(2));
     }
 
@@ -47,8 +47,8 @@ export async function downloadExcel(plan) {
     if(temperatures) {
         let worksheet = workbook.getWorksheet("plan");
         for(let i = 0; i < 7; ++i) {
-            for(let j = 0; j < 24; ++j) {
-                worksheet.getCell(i + 2, j + 2).value = temperatures[i * 24 + j];
+            for(let j = 0; j < 2 * 24; ++j) {
+                worksheet.getCell(((i + 6) % 7) + 2, j + 2).value = temperatures[i * 2 * 24 + j];
             }
         }
     }
