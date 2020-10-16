@@ -34,6 +34,14 @@ add_custom_target(controller_program DEPENDS ${CMAKE_BINARY_DIR}/controller/cont
 add_custom_target(flash_data esptool.py --chip esp8266 --port /dev/ttyUSB0 write_flash 0x200000 ${CMAKE_BINARY_DIR}/spiffs.bin
     DEPENDS ${CMAKE_BINARY_DIR}/spiffs.bin)
 
+add_custom_target(deploy_web
+    COMMAND npm --prefix "${CMAKE_SOURCE_DIR}/server" run build
+    COMMAND rm -rf ${CMAKE_BINARY_DIR}/deploy-thermometer
+    COMMAND heroku git:clone -a kulhankovi ${CMAKE_BINARY_DIR}/deploy-thermometer
+    COMMAND cp ${CMAKE_BINARY_DIR}/server/dist/* -r ${CMAKE_BINARY_DIR}/deploy-thermometer/dist
+    COMMAND cd ${CMAKE_BINARY_DIR}/deploy-thermometer && git add . && git commit -m "automatic update" && git push heroku master
+    COMMAND rm -rf ${CMAKE_BINARY_DIR}/deploy-thermometer)
+
 add_custom_target(flash_program
     arduino-cli compile --config-file ${CMAKE_SOURCE_DIR}/controller/arduino-cli.yaml --build-properties build.flash_size=2M --fqbn esp8266:esp8266:nodemcuv2 ${CMAKE_SOURCE_DIR}/controller
     COMMAND arduino-cli upload -p /dev/ttyUSB0 --config-file ${CMAKE_SOURCE_DIR}/controller/arduino-cli.yaml --fqbn esp8266:esp8266:nodemcuv2 ${CMAKE_SOURCE_DIR}/controller
