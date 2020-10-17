@@ -7,10 +7,14 @@
     "start:api": "yarn --cwd ./server start",
     "start:react": "yarn --cwd ./client start",
     "start:all": "redrun -p start:api start:react",
-    "build:react": "yarn --cwd ./client build"
+    "start": "NODE_ENV=production node server",
+    "build": "yarn --cwd ./client build",
+    "deploy": "yarn --cwd ./client build && rm -rf /tmp/deploy-thermometer && heroku git:clone -a kulhankovi /tmp/deploy-thermometer && cp client server package.json -r /tmp/deploy-thermometer && cd /tmp/deploy-thermometer && git add . && git commit -m \"automatic update\" && git push heroku master && rm -rf /tmp/deploy-thermometer",
+"heroku-postbuild": "cd client && npm install && npm install --only=dev --no-shrinkwrap && npm run build"
   },
   "devDependencies": {
-    "redrun": "^6.0.6"
+    "redrun": "^6.0.6",
+    "yarn": "^1.22.10"
   },
   "author": "jonas.kulhanek@live.com",
   "license": "MIT",

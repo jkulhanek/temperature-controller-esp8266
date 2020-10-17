@@ -22,29 +22,33 @@ function handleError(dispatch) {
     }
 }
 
-export function fetchTemporaryTemperature() {
+export function fetchTemporaryTemperature(deviceId) {
+    deviceId = deviceId || "thermostat";
     const name = "TemporaryTemperature";
     const sname = toSnakeCase(name);
     const fetchStarted = () => ({
         type: "FETCH_" + sname + "_STARTED",
+        device: deviceId,
         loading: true,
     });
 
     const fetchFailed = (error) => ({
         type: "FETCH_" + sname + "_FAILED",
+        device: deviceId,
         loading: false,
         error: error
     });
 
     const fetchCompleted = (data) => ({
         type: "FETCH_" + sname + "_COMPLETED",
+        device: deviceId,
         loading: false,
         payload: data,
     });
     
     return (dispatch, getState) => {
         dispatch(fetchStarted());
-        return authentication.authorizedFetch(apiPath + "/temporaryTemperature", { cache: 'no-cache', mode: 'cors' })
+        return authentication.authorizedFetch(apiPath + `/device/${deviceId}/temporaryTemperature`, { cache: 'no-cache', mode: 'cors' })
             .then(handleError(dispatch))
             .then(response => response.json())
             .then(json => {
@@ -55,29 +59,33 @@ export function fetchTemporaryTemperature() {
         }
 }
 
-export function fetchCurrentTemperature() {
+export function fetchCurrentTemperature(deviceId) {
+    deviceId = deviceId || "thermostat";
     const name = "CurrentTemperature";
     const sname = toSnakeCase(name);
     const fetchStarted = () => ({
         type: "FETCH_" + sname + "_STARTED",
+        device: deviceId,
         loading: true,
     });
 
     const fetchFailed = (error) => ({
         type: "FETCH_" + sname + "_FAILED",
+        device: deviceId,
         loading: false,
         error: error
     });
 
     const fetchCompleted = (data) => ({
         type: "FETCH_" + sname + "_COMPLETED",
+        device: deviceId,
         loading: false,
         payload: data,
     });
     
     return (dispatch, getState) => {
         dispatch(fetchStarted());
-        return authentication.authorizedFetch(apiPath + "/temperature", { cache: 'no-cache', mode: 'cors' })
+        return authentication.authorizedFetch(apiPath + `/device/${deviceId}/temperature`, { cache: 'no-cache', mode: 'cors' })
             .then(handleError(dispatch))
             .then(response => response.json())
             .then(json => {
@@ -88,29 +96,33 @@ export function fetchCurrentTemperature() {
         }
 }
 
-export function fetchState() {
+export function fetchState(deviceId) {
+    deviceId = deviceId || "thermostat";
     const name = "State";
     const sname = toSnakeCase(name);
     const fetchStarted = () => ({
         type: "FETCH_" + sname + "_STARTED",
+        device: deviceId,
         loading: true,
     });
 
     const fetchFailed = (error) => ({
         type: "FETCH_" + sname + "_FAILED",
+        device: deviceId,
         loading: false,
         error: error
     });
 
     const fetchCompleted = (data) => ({
         type: "FETCH_" + sname + "_COMPLETED",
+        device: deviceId,
         loading: false,
         payload: data,
     });
     
     return (dispatch, getState) => {
         dispatch(fetchStarted());
-        return authentication.authorizedFetch(apiPath + "/on", { cache: 'no-cache', mode: 'cors' })
+        return authentication.authorizedFetch(apiPath + `/device/${deviceId}/on`, { cache: 'no-cache', mode: 'cors' })
             .then(handleError(dispatch))
             .then(response => response.json())
             .then(json => {
@@ -121,29 +133,33 @@ export function fetchState() {
         }
 }
 
-export function fetchCurrentPlan() {
+export function fetchCurrentPlan(deviceId) {
+    deviceId = deviceId || "thermostat";
     const name = "CurrentPlan";
     const sname = toSnakeCase(name);
     const fetchStarted = () => ({
         type: "FETCH_" + sname + "_STARTED",
+        device: deviceId,
         loading: true,
     });
 
     const fetchFailed = (error) => ({
         type: "FETCH_" + sname + "_FAILED",
+        device: deviceId,
         loading: false,
         error: error
     });
 
     const fetchCompleted = (data) => ({
         type: "FETCH_" + sname + "_COMPLETED",
+        device: deviceId,
         loading: false,
         payload: data,
     });
     
     return (dispatch, getState) => {
         dispatch(fetchStarted());
-        return authentication.authorizedFetch(apiPath + "/plan", { cache: 'no-cache', mode: 'cors' })
+        return authentication.authorizedFetch(apiPath + `/device/${deviceId}/plan`, { cache: 'no-cache', mode: 'cors' })
             .then(handleError(dispatch))
             .then(response => response.json())
             .then(json => {
@@ -156,14 +172,15 @@ export function fetchCurrentPlan() {
         }
 }
 
-export function putTemporaryTemperature(temperature, duration) {
+export function putTemporaryTemperature(temperature, duration, deviceId) {
+    deviceId = deviceId || "thermostat";
     const name = "TemporaryTemperature";
     const sname = toSnakeCase(name);
     const now = (new Date(Date.now())).toISOString();
 
     return (dispatch, getState) => {
         dispatch({type: "POST_" + sname + "_STARTED", payload: {temperature, duration}});
-        return authentication.authorizedFetch(apiPath + "/temporaryTemperature", {
+        return authentication.authorizedFetch(apiPath + `/device/${deviceId}/temporaryTemperature`, {
             method: 'PUT',
             cache: 'no-cache',
             mode: 'cors',
@@ -176,21 +193,28 @@ export function putTemporaryTemperature(temperature, duration) {
         })
         .then(handleError(dispatch))
         .then(() => {
-            dispatch({type: "POST_" + sname + "_COMPLETED", payload: {temperature, duration, now}});
+            dispatch({
+                type: "POST_" + sname + "_COMPLETED", 
+                device: deviceId,
+                payload: {temperature, duration, now}});
             return {temperature, duration, now};
         })
-        .catch(error => dispatch({type: "POST_" + sname + "_FAILED", error:error }));
+        .catch(error => dispatch({
+            type: "POST_" + sname + "_FAILED", 
+            device: deviceId,
+            error:error }));
     }
 }
 
-export function putCurrentPlan(plan) {
+export function putCurrentPlan(plan, deviceId) {
+    deviceId = deviceId || "thermostat";
     const name = "CurrentPlan";
     const sname = toSnakeCase(name);
     const now = (new Date(Date.now())).toISOString();
 
     return (dispatch, getState) => {
         dispatch({type: "POST_" + sname + "_STARTED", payload: plan});
-        return authentication.authorizedFetch(apiPath + "/plan", {
+        return authentication.authorizedFetch(apiPath + `/device/${deviceId}/plan`, {
             method: 'PUT',
             cache: 'no-cache',
             mode: 'cors',
@@ -206,22 +230,23 @@ export function putCurrentPlan(plan) {
         })
         .then(handleError(dispatch))
         .then(() => {
-            dispatch({type: "POST_" + sname + "_COMPLETED"});
+            dispatch({type: "POST_" + sname + "_COMPLETED", device: deviceId});
             dispatch(fetchCurrentTemperature());
             return plan;
         })
-        .catch(error => dispatch({type: "POST_" + sname + "_FAILED", error:error }));
+        .catch(error => dispatch({type: "POST_" + sname + "_FAILED", error:error, device:deviceId }));
     }
 }
 
-export function putState(on) {
+export function putState(on, deviceId) {
+    deviceId = deviceId || "thermostat";
     const name = "State";
     const sname = toSnakeCase(name);
     const now = (new Date(Date.now())).toISOString();
 
     return (dispatch, getState) => {
         dispatch({type: "POST_" + sname + "_STARTED", payload: { isOn: on }});
-        return authentication.authorizedFetch(apiPath + "/on", {
+        return authentication.authorizedFetch(apiPath + `/device/${deviceId}/on`, {
             method: 'POST',
             cache: 'no-cache',
             mode: 'cors',
@@ -235,10 +260,10 @@ export function putState(on) {
         .then(handleError(dispatch))
         .then(response => response.json())
         .then((json) => {
-            dispatch({type: "POST_" + sname + "_COMPLETED", payload: json});
+            dispatch({type: "POST_" + sname + "_COMPLETED", device: deviceId, payload: json});
             dispatch(fetchCurrentTemperature());
             return json;
         })
-        .catch(error => dispatch({type: "POST_" + sname + "_FAILED", error:error }));
+        .catch(error => dispatch({type: "POST_" + sname + "_FAILED", device: deviceId, error:error }));
     }
 }
