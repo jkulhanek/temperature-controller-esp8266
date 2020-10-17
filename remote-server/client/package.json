@@ -1,0 +1,46 @@
+{
+  "name": "client2",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.3.2",
+    "@testing-library/user-event": "^7.1.2",
+    "arraybuffer-loader": "^1.0.8",
+    "bootstrap": "3.3.7",
+    "chartist": "^0.11.4",
+    "chartist-plugin-legend": "^0.6.2",
+    "file-saver": "^2.0.2",
+    "react": "^16.14.0",
+    "react-bootstrap": "0.32.4",
+    "react-chartist": "^0.14.3",
+    "react-dom": "^16.14.0",
+    "react-notification-system-redux": "^2.0.1"
+  },
+  "scripts": {
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "node-sass": "^4.14.1",
+    "react-app-rewired": "^2.1.6",
+    "react-scripts": "3.4.3"
+  }
+}

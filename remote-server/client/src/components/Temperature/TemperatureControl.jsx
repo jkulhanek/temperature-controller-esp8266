@@ -1,6 +1,6 @@
 import { connect } from 'react-redux';
 import React from 'react';
-import { Card } from "/components/Card/Card.jsx";
+import { Card } from "components/Card/Card.jsx";
 import {connectDataPeriodic} from 'components';
 import { fetchCurrentTemperature } from 'actions';
 import Thermostat from './Thermostat';
