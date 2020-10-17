@@ -206,6 +206,42 @@ export function putTemporaryTemperature(temperature, duration, deviceId) {
     }
 }
 
+export function resetTemporaryTemperature(currentUserTemperature, deviceId) {
+    // TODO: remove currentUserTemperature
+    deviceId = deviceId || "thermostat";
+    const name = "TemporaryTemperature";
+    const sname = toSnakeCase(name);
+    const now = (new Date(Date.now())).toISOString();
+
+    return (dispatch, getState) => {
+        dispatch({type: "POST_" + sname + "_STARTED", payload: {temperature: currentUserTemperature, duration: 0}});
+        return authentication.authorizedFetch(apiPath + `/device/${deviceId}/temporaryTemperature`, {
+            method: 'PUT',
+            cache: 'no-cache',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            redirect: 'follow',
+            referrer: 'no-referrer',
+            body: JSON.stringify({ temperature: currentUserTemperature, duration: 0, start: now }),
+        })
+        .then(handleError(dispatch))
+        .then(() => {
+            dispatch({
+                type: "POST_" + sname + "_COMPLETED", 
+                device: deviceId,
+                payload: {temperature: currentUserTemperature, duration: 0, now}});
+            setTimeout(() => dispatch(fetchCurrentTemperature(deviceId)), 5000);
+            return {temperature: currentUserTemperature, duration: 0, now};
+        })
+        .catch(error => dispatch({
+            type: "POST_" + sname + "_FAILED", 
+            device: deviceId,
+            error:error }));
+    }
+}
+
 export function putCurrentPlan(plan, deviceId) {
     deviceId = deviceId || "thermostat";
     const name = "CurrentPlan";
