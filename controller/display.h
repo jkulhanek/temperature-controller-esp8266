@@ -53,7 +53,7 @@ void render(const view_t *view) {
     display.clearDisplay();
 }
 
-void printLoadingStatus(char * status) {
+void print_loading_status(char * status) {
     display.setCursor(0,0);
     display.println("Loading...");
     display.println(status);
@@ -61,7 +61,7 @@ void printLoadingStatus(char * status) {
     display.clearDisplay();
 }
 
-void printError(char * error) {
+void print_error(char * error) {
     display.setCursor(0,0);
     display.println("Error");
     display.println(error);
@@ -70,7 +70,7 @@ void printError(char * error) {
 }
 
 
-void initializeDisplay() {
+void initialize_display() {
     display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
     display.setTextSize(1);
     display.setTextColor(WHITE);

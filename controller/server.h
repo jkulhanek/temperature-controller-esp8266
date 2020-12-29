@@ -247,8 +247,7 @@ void handleTemporaryTemperature() {
     if(handleHttpOptions()) return;
     if(handleAuthentication()) return;
 
-    time_t now;
-    time(&now);
+    time_t now = current_time(nullptr);
     auto method = server.method();
     if(method == HTTP_GET) {
         settings_t * settings = getSettings();
@@ -308,8 +307,7 @@ void handleCurrentPlan() {
         String plan("{\"time\":\"");
         {
             char timeStr[DATETIME_LENGTH];
-            time_t now;
-            time(&now);
+            time_t now = current_time(nullptr);
             strftime(timeStr, sizeof(timeStr), "%FT%TZ", gmtime(&now));
             plan += String(timeStr);
         }
@@ -410,9 +408,8 @@ void handleCurrentTemperature() {
 
 
     char timeStr[DATETIME_LENGTH];
-    time_t now;
+    time_t now = current_time(nullptr);
     float temp;
-    time(&now);
     strftime(timeStr, sizeof(timeStr), "%FT%TZ", gmtime(&now));
     String json("{\"time\":\"");
     json += timeStr;

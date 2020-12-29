@@ -5,6 +5,7 @@
 #define STAPSK  "highwaytohell"
 #include <time.h>
 
+time_t current_time(time_t * time); 
 typedef struct {
     char time[9];
     char thermostat_temperature[5];
@@ -13,7 +14,6 @@ typedef struct {
     bool is_on;
     bool is_heating;
 } view_t;
-
 
 bool parseDateTime(const char * text, time_t * time);
 

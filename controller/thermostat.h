@@ -4,6 +4,7 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <time.h>
+#include "common.h"
 #include "settings.h"
 #include "logging.h"
 #define UPDATE_INTERVAL 5000
@@ -113,8 +114,7 @@ float Thermostat::computeCurrentUserTemperature(const time_t * now) {
 }
 
 void Thermostat::invalidateCurrentUserTemperature() {
-    time_t now;
-    time(&now);
+    time_t now = current_time(nullptr);
     this->_currentUserTemperature = computeCurrentUserTemperature(&now);
 }
 

@@ -28,8 +28,7 @@ class Analytics {
 };
 
 void Analytics::initialize() {
-    time_t timer;
-    time(&timer);
+    time_t timer = current_time(nullptr);
     this->logDate(timer, true);
 
     // logging
@@ -139,15 +138,13 @@ void Analytics::update(const unsigned int & millis) {
         return;
     }
     this->lastUpdate = millis;
-    time_t timer;
-    time(&timer);
+    time_t timer = current_time(nullptr);
     this->logDate(timer, false);
     this->logTemperature(timer); 
 }
 
 void Analytics::invalidateHeatingState() {
-    time_t timer;
-    time(&timer);
+    time_t timer = current_time(nullptr);
     this->logDate(timer, false);
     this->logTemperature(timer); 
     this->logHeatingStatus(timer, thermostat.isHeating); 
