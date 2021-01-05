@@ -128,13 +128,12 @@ void Thermostat::updateTemperature(unsigned long millis) {
     }
 
     auto settings = getSettings();
-
+    this->_currentTemperature += settings->temperature_offset;
     if(this->hasCurrentTemperature) {
         // Exponential weighting
         auto settings = getSettings();
         float weightRatio = settings->temperature_exponential_weight;
         this->_currentTemperature = weightRatio * this->_currentTemperature + (1 - weightRatio) * temp;
-        this->_currentTemperature += settings->temperature_offset;
     }
     else
         this->_currentTemperature = temp;
