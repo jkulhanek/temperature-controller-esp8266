@@ -69,7 +69,7 @@ function generalFetch(name, settings) {
 
 export const fetchTemporaryTemperature = generalFetch('TemporaryTemperature', '/temporaryTemperature');
 export const fetchCurrentTemperature = generalFetch('CurrentTemperature', '/temperature');
-export const fetchState = generalFetch('CurrentTemperature', '/on');
+export const fetchState = generalFetch('State', '/on');
 export const fetchCurrentPlan = generalFetch('CurrentPlan', { path: '/plan', formatResult: (data) => ({
   name: "default",
   temperatures: data.plan,
