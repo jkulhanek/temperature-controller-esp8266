@@ -143,13 +143,20 @@ class Device {
             return hasTime();
         }
 
+        void initialize_io() {
+            pinMode(13, INPUT);
+            pinMode(15, INPUT);
+        }
+
         void boot() {
             state.name = DeviceStateName::booting;
             thermostat.bindOutput(); 
             Serial.begin(115200);
-            Serial.setDebugOutput(true);
+            // Serial.setDebugOutput(true);
+            Serial.println("device starting");
 
             initialize_display();
+            initialize_io();
             print_loading_status("loading");
 
             if(!SPIFFS.begin()) {
@@ -192,10 +199,20 @@ class Device {
 
             analytics.initialize();
             thermostat.initialize(&invalidateHeatingState);
+
+            if(!initializeServer()) {
+                print_error("server could not be initialized");
+                return;
+            }
             state.name = DeviceStateName::running;
             displayUpdateTask.run(mill, true);
             render_display();
         }
+
+        unsigned long last_button_tick = 0;
+        unsigned int button_cooldown = 500;
+        unsigned char last_button = 0;
+        bool handle_buttons(unsigned long millis);
 };
 
 
@@ -208,6 +225,9 @@ void Device::update() {
     }
 
     auto mill = millis();
+    bool redraw = false;
+    redraw = handle_buttons(mill);
+
     if(connectingTask.run(mill)) {
         bool status = connect();
         connectingTask.notify(status);
@@ -218,7 +238,7 @@ void Device::update() {
         connectingTask.notify(status);
     }
 
-    if(displayUpdateTask.run(mill)) {
+    if(redraw || displayUpdateTask.run(mill)) {
         render_display();
     }
 
@@ -226,4 +246,31 @@ void Device::update() {
     analytics.update(mill);
     server.handleClient();
     MDNS.update();
+}
+
+bool Device::handle_buttons(unsigned long millis) {
+    bool redraw = false;
+    unsigned char current_button = 0;
+    if(digitalRead(13) == HIGH) {
+        current_button = 2; // UP
+    }
+    if(digitalRead(15) == HIGH) {
+        current_button = 1; // DOWN 
+    }
+    if((last_button_tick + button_cooldown < millis || last_button != current_button) && current_button != 0) {
+        // Handle button event
+        Serial.printf("Pressing button: %d\n", current_button);
+        float temp;
+        if(thermostat.getUserTemperature(&temp)) {
+            if(current_button == 2)
+                temp += 0.5;
+            else if(current_button)
+                temp -= 0.5;
+            thermostat.set_temporary_temperature(temp, 7200);
+            redraw = true;
+            last_button_tick = millis;
+        }
+    }
+    this->last_button = current_button;
+    return redraw;
 }

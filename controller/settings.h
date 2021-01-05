@@ -18,6 +18,9 @@ typedef struct {
     int currentPlanId;
     bool isOn;
     unsigned char currentPlan[2*24*7];
+    float temperature_offset;
+    float temperature_on_margin;
+    float temperature_exponential_weight;
 } settings_t;
 
 bool saveSettings();

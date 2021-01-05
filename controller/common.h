@@ -6,6 +6,7 @@
 #include <time.h>
 
 time_t current_time(time_t * time); 
+time_t to_utc(time_t timer);
 typedef struct {
     char time[9];
     char thermostat_temperature[5];

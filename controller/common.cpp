@@ -39,3 +39,7 @@ time_t current_time(time_t * timer) {
         return tm;
     }
 }
+
+time_t to_utc(time_t timer) {
+    return _PRG.toUTC(timer);
+}

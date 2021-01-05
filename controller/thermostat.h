@@ -65,6 +65,8 @@ class Thermostat {
         return this->hasCurrentTemperature;
     }
 
+    bool set_temporary_temperature(float temperature, long duration);
+
     void invalidateCurrentUserTemperature();
     bool validateTemporaryTemperature(const time_t * time);
     void force_update();
@@ -125,11 +127,14 @@ void Thermostat::updateTemperature(unsigned long millis) {
         return;
     }
 
-    temp -= 1.0f; // Calibration
+    auto settings = getSettings();
+
     if(this->hasCurrentTemperature) {
         // Exponential weighting
-        float weightRatio = 0.82;
+        auto settings = getSettings();
+        float weightRatio = settings->temperature_exponential_weight;
         this->_currentTemperature = weightRatio * this->_currentTemperature + (1 - weightRatio) * temp;
+        this->_currentTemperature += settings->temperature_offset;
     }
     else
         this->_currentTemperature = temp;
@@ -141,6 +146,22 @@ void Thermostat::updateTemperature(unsigned long millis) {
 
     this->invalidateCurrentUserTemperature();
     this->hasUserTemperature = true;
+}
+
+bool Thermostat::set_temporary_temperature(float temperature, long duration) {
+    time_t now = current_time(nullptr);
+    settings_t * settings = getSettings();
+    validateTemporaryTemperature(&now);
+    settings->temporaryTemperature.temperature = temperature;
+    settings->temporaryTemperature.duration = duration;
+    settings->temporaryTemperature.isSet = true;
+    settings->temporaryTemperature.start = now;
+    if(!saveSettings()) {
+        Serial.println("Cannot save settings");
+        return false;
+    }
+    this->invalidateCurrentUserTemperature();
+    this->force_update();
 }
 
 void Thermostat::updateHeatingState(unsigned long millis) {
@@ -161,7 +182,7 @@ void Thermostat::updateHeatingState(unsigned long millis) {
         if(!this->isHeating && this->_currentTemperature < this->_currentUserTemperature) {
             heating = true;
         }
-        if(this->isHeating && this->_currentTemperature >= this->_currentUserTemperature + 1) {
+        if(this->isHeating && this->_currentTemperature >= this->_currentUserTemperature + getSettings()->temperature_on_margin) {
             heating = false;
         }
     }

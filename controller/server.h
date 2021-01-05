@@ -139,6 +139,9 @@ bool handleFileUpdate(String path) {
     f.flush();
     f.close();
     server.send(200, "text/plain", "");
+    if(path.equals("/data/config.json")) {
+        initializeSettings();
+    }
     return true;
 }
 
@@ -255,7 +258,8 @@ void handleTemporaryTemperature() {
             server.send(200, "application/json", "null");
         } else {
             char timeStr[DATETIME_LENGTH];
-            strftime(timeStr, sizeof(timeStr), "%FT%TZ", gmtime(&settings->temporaryTemperature.start));
+            time_t startTime = to_utc(settings->temporaryTemperature.start);
+            strftime(timeStr, sizeof(timeStr), "%FT%TZ", gmtime(&startTime));
             DynamicJsonDocument doc(1024);
             doc["temperature"] = settings->temporaryTemperature.temperature;
             doc["duration"] = settings->temporaryTemperature.duration;
@@ -307,7 +311,7 @@ void handleCurrentPlan() {
         String plan("{\"time\":\"");
         {
             char timeStr[DATETIME_LENGTH];
-            time_t now = current_time(nullptr);
+            time_t now = time(nullptr);
             strftime(timeStr, sizeof(timeStr), "%FT%TZ", gmtime(&now));
             plan += String(timeStr);
         }
@@ -408,7 +412,7 @@ void handleCurrentTemperature() {
 
 
     char timeStr[DATETIME_LENGTH];
-    time_t now = current_time(nullptr);
+    time_t now = time(nullptr);
     float temp;
     strftime(timeStr, sizeof(timeStr), "%FT%TZ", gmtime(&now));
     String json("{\"time\":\"");
@@ -429,7 +433,7 @@ void handleCurrentTemperature() {
 }
 
 bool initializeServer() {
-    if (MDNS.begin("esp8266")) {
+    if (MDNS.begin("topeni")) {
         Serial.println("MDNS responder started");
     } else {
         Serial.println("MDNS failed");

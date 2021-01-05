@@ -15,6 +15,9 @@ void createDefaultConfiguration() {
 
     settings.temporaryTemperature.isSet = false;
     settings.isOn = false;
+    settings.temperature_offset = -5;
+    settings.temperature_on_margin = 0.7;
+    settings.temperature_exponential_weight = 0.8;
 }
 
 bool readSettings() {
@@ -45,6 +48,9 @@ bool readSettings() {
 
     settings.currentPlanId = root["currentPlanId"];
     settings.isOn = root["isOn"];
+    settings.temperature_offset = root["temperature_offset"];
+    settings.temperature_on_margin = root["temperature_on_margin"];
+    settings.temperature_exponential_weight = root["temperature_exponential_weight"];
     settings.temporaryTemperature.isSet = root.containsKey("temporaryTemperature") && !root["temporaryTemperature"].isNull();
     if(settings.temporaryTemperature.isSet) {
         settings.temporaryTemperature.temperature = root["temporaryTemperature"]["temperature"];
@@ -69,6 +75,9 @@ bool saveSettings() {
     JsonObject root = doc.to<JsonObject>();
     root["currentPlanId"] = settings.currentPlanId;
     root["isOn"] = settings.isOn;
+    root["temperature_offset"] = settings.temperature_offset;
+    root["temperature_on_margin"] = settings.temperature_on_margin;
+    root["temperature_exponential_weight"] = settings.temperature_exponential_weight;
     JsonArray arr = root.createNestedArray("currentPlan");
     for(uint16_t i=0; i < sizeof(settings.currentPlan); ++i) {
         arr.add(settings.currentPlan[i]);

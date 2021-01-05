@@ -11,6 +11,7 @@ class SetTemporaryTemperature extends React.Component {
         this.state = {
             duration: "7200",
         }
+        this.hours = [1,2,3,4,5,6,7,8,9,10,11,12];
     }
 
     commit() {
@@ -19,18 +20,14 @@ class SetTemporaryTemperature extends React.Component {
     }
 
     render() {
+        
         return <React.Fragment><Row>
             <Col xs={12}>
                 <div className="form-group">
                     <label className="control-label">Duration</label>
-                    <select className="form-control" value={this.state.duration} onChange={(e) => this.setState({duration: e.target.value})}>
-                        <option value="3600">1 hour</option>
-                        <option value="7200">2 hours</option>
-                        <option value="10800">3 hours</option>
-                        <option value="18000">5 hours</option>
-                        <option value="28800">8 hours</option>
-                        <option value="43200">12 hours</option>
-                    </select>
+                    <select className="form-control" value={this.state.duration} onChange={(e) => this.setState({duration: e.target.value})} children={this.hours.map((x) => (
+    <option key={x} value={x * 3600}>{x} hour</option>
+                    ))}></select>
                 </div>                        
             </Col>
         </Row><Row>
